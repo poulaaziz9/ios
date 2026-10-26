@@ -115,6 +115,8 @@ export default async function PointsLedgerPage({
           <ul className="flex flex-col divide-y rounded-xl border bg-card px-4 shadow-sm">
             {entries.map((e) => {
               const isCorrection = !!e.source_id && corrections.has(e.source_id);
+              // Gift debits are undone by rejecting the request instead.
+              const reversible = !isCorrection && e.reason !== "gift_redemption";
               return (
                 <li key={e.id} className="flex items-center gap-3 py-3">
                   <span
@@ -140,7 +142,7 @@ export default async function PointsLedgerPage({
                   {reversed.has(e.id) ? (
                     <span className="text-xs text-muted-foreground">{t.reversed}</span>
                   ) : (
-                    !isCorrection && (
+                    reversible && (
                       <form action={reversePoints.bind(null, serviceId, e.id)}>
                         <SubmitButton variant="ghost" size="sm" confirm={t.reverseConfirm}>
                           {t.reverse}

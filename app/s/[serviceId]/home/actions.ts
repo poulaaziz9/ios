@@ -1,5 +1,8 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+
+import { fromError, type ActionState } from "@/lib/action-result";
 import { strings } from "@/lib/strings";
 import { createClient } from "@/lib/supabase/server";
 
@@ -34,4 +37,12 @@ export async function submitQuiz(
   }
   const row = data?.[0];
   return row ? { result: row } : { error: strings.common.genericError };
+}
+
+export async function redeemGift(serviceId: string, giftId: string): Promise<ActionState> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("redeem_gift", { p_gift: giftId });
+  revalidatePath(`/s/${serviceId}/home/gifts`);
+  const known = strings.gifts.errors[error?.message as keyof typeof strings.gifts.errors];
+  return known ? { error: known } : fromError(error);
 }

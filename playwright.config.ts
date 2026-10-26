@@ -8,7 +8,8 @@ export default defineConfig({
   testDir: "e2e",
   timeout: 60_000,
   fullyParallel: true,
-  retries: process.env.CI ? 1 : 0,
+  // No retries: the serial flows change seed data, so a retry would start from a different state.
+  retries: 0,
   reporter: process.env.CI ? "github" : "list",
   use: {
     baseURL,

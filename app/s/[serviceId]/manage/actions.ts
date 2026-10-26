@@ -7,6 +7,7 @@ import { fromError, text, type ActionState } from "@/lib/action-result";
 import type { Database } from "@/lib/database.types";
 import { strings } from "@/lib/strings";
 import { createClient } from "@/lib/supabase/server";
+import { imageFromForm, uploadImage } from "@/lib/upload";
 
 // Authorization is enforced in Postgres (RLS + RPC checks on is_service_admin).
 
@@ -354,4 +355,148 @@ export async function deleteQuestion(serviceId: string, questionId: string) {
   const supabase = await createClient();
   await supabase.from("competition_questions").delete().eq("id", questionId);
   revalidate(serviceId);
+}
+
+// ---------------------------------------------------------------------------
+// Posts (timeline)
+// ---------------------------------------------------------------------------
+export async function createPost(
+  serviceId: string,
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const body = text(formData, "body");
+  const photo = imageFromForm(formData, "image");
+  if (!body && !photo) return { error: strings.posts.empty };
+  const supabase = await createClient();
+  const { data: claims } = await supabase.auth.getClaims();
+
+  let imagePath: string | null = null;
+  if (photo) {
+    const uploaded = await uploadImage(supabase, "service-media", serviceId, photo);
+    if (!uploaded.path) return { error: strings.profile.photoError };
+    imagePath = uploaded.path;
+  }
+  const { error } = await supabase.from("posts").insert({
+    service_id: serviceId,
+    class_id: text(formData, "class_id") || null,
+    author_id: claims?.claims.sub,
+    body,
+    image_url: imagePath,
+  });
+  if (error && imagePath) await supabase.storage.from("service-media").remove([imagePath]);
+  revalidatePath(`/s/${serviceId}`, "layout");
+  return fromError(error);
+}
+
+export async function deletePost(serviceId: string, postId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("posts")
+    .delete()
+    .eq("id", postId)
+    .eq("service_id", serviceId)
+    .select("image_url")
+    .maybeSingle();
+  if (data?.image_url) await supabase.storage.from("service-media").remove([data.image_url]);
+  revalidatePath(`/s/${serviceId}`, "layout");
+}
+
+// ---------------------------------------------------------------------------
+// Gifts
+// ---------------------------------------------------------------------------
+export async function createGift(
+  serviceId: string,
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const name = text(formData, "name");
+  const cost = Number.parseInt(text(formData, "cost_points"), 10);
+  const stockRaw = text(formData, "stock");
+  if (!name) return { error: strings.common.nameRequired };
+  if (!Number.isFinite(cost) || cost <= 0) return { error: strings.points.zeroPoints };
+  const supabase = await createClient();
+
+  let imagePath: string | null = null;
+  const photo = imageFromForm(formData, "image");
+  if (photo) {
+    const uploaded = await uploadImage(supabase, "service-media", serviceId, photo);
+    if (!uploaded.path) return { error: strings.profile.photoError };
+    imagePath = uploaded.path;
+  }
+  const { error } = await supabase.from("gifts").insert({
+    service_id: serviceId,
+    name,
+    cost_points: cost,
+    stock: stockRaw ? Math.max(0, Number.parseInt(stockRaw, 10) || 0) : null,
+    image_url: imagePath,
+  });
+  revalidatePath(`/s/${serviceId}`, "layout");
+  return fromError(error);
+}
+
+export async function setGiftActive(serviceId: string, giftId: string, active: boolean) {
+  const supabase = await createClient();
+  await supabase.from("gifts").update({ is_active: active }).eq("id", giftId).eq("service_id", serviceId);
+  revalidatePath(`/s/${serviceId}`, "layout");
+}
+
+export async function deleteGift(serviceId: string, giftId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("gifts")
+    .delete()
+    .eq("id", giftId)
+    .eq("service_id", serviceId)
+    .select("image_url")
+    .maybeSingle();
+  if (data?.image_url) await supabase.storage.from("service-media").remove([data.image_url]);
+  revalidatePath(`/s/${serviceId}`, "layout");
+}
+
+export async function decideRedemption(
+  serviceId: string,
+  redemptionId: string,
+  status: "approved" | "rejected" | "delivered",
+): Promise<ActionState> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("decide_redemption", { p_redemption: redemptionId, p_status: status });
+  revalidatePath(`/s/${serviceId}`, "layout");
+  const known = strings.gifts.errors[error?.message as keyof typeof strings.gifts.errors];
+  return known ? { error: known } : fromError(error);
+}
+
+// ---------------------------------------------------------------------------
+// Achievements
+// ---------------------------------------------------------------------------
+const ACHIEVEMENT_TYPES = ["points_total", "competitions_count", "visits_count"] as const;
+
+export async function createAchievement(
+  serviceId: string,
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const name = text(formData, "name");
+  const type = text(formData, "type") as (typeof ACHIEVEMENT_TYPES)[number];
+  const gte = Number.parseInt(text(formData, "gte"), 10);
+  if (!name) return { error: strings.common.nameRequired };
+  if (!ACHIEVEMENT_TYPES.includes(type) || !Number.isFinite(gte) || gte < 1) {
+    return { error: strings.common.genericError };
+  }
+  const supabase = await createClient();
+  const { error } = await supabase.from("achievements").insert({
+    service_id: serviceId,
+    name,
+    description: text(formData, "description") || null,
+    icon: text(formData, "icon") || "award",
+    criteria: { type, gte },
+  });
+  revalidatePath(`/s/${serviceId}`, "layout");
+  return fromError(error);
+}
+
+export async function deleteAchievement(serviceId: string, achievementId: string) {
+  const supabase = await createClient();
+  await supabase.from("achievements").delete().eq("id", achievementId).eq("service_id", serviceId);
+  revalidatePath(`/s/${serviceId}`, "layout");
 }

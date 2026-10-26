@@ -183,17 +183,23 @@ isOneToOne: false
                   ]
                 },"gift_redemptions": {
                   Row: {
-                    "created_at": string,"gift_id": string,"id": string,"status": Database["public"]['Enums']["redemption_status"],"user_id": string
+                    "created_at": string,"decided_at": string | null,"decided_by": string | null,"gift_id": string,"id": string,"status": Database["public"]['Enums']["redemption_status"],"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "created_at"?: string,"gift_id": string,"id"?: string,"status"?: Database["public"]['Enums']["redemption_status"],"user_id": string
+                    "created_at"?: string,"decided_at"?: string | null,"decided_by"?: string | null,"gift_id": string,"id"?: string,"status"?: Database["public"]['Enums']["redemption_status"],"user_id": string
                   }
                   Update: {
-                    "created_at"?: string,"gift_id"?: string,"id"?: string,"status"?: Database["public"]['Enums']["redemption_status"],"user_id"?: string
+                    "created_at"?: string,"decided_at"?: string | null,"decided_by"?: string | null,"gift_id"?: string,"id"?: string,"status"?: Database["public"]['Enums']["redemption_status"],"user_id"?: string
                   }
                   Relationships: [
                     {
+      foreignKeyName: "gift_redemptions_decided_by_fkey"
+      columns: ["decided_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "gift_redemptions_gift_id_fkey"
       columns: ["gift_id"]
 isOneToOne: false
@@ -603,8 +609,19 @@ isOneToOne: false
                 }
           }
           Functions: {
-            "achievement_service_id":
+            "achievement_counts":
+{ Args: { "p_service": string }; Returns: {
+              "achievement_id": string,"earned": number
+            }[]
+                           },
+"achievement_progress":
+{ Args: { "p_service": string,"p_type": string,"p_user": string }; Returns: number
+                           },
+"achievement_service_id":
 { Args: { "p_achievement": string }; Returns: string
+                           },
+"available_points":
+{ Args: { "p_service": string,"p_user": string }; Returns: number
                            },
 "award_points":
 { Args: { "p_note"?: string,"p_points": number,"p_reason"?: Database["public"]['Enums']["point_reason"],"p_service": string,"p_user": string }; Returns: string
@@ -668,6 +685,12 @@ isOneToOne: false
         isOneToOne: true
         isSetofReturn: false
       } },
+"decide_redemption":
+{ Args: { "p_redemption": string,"p_status": Database["public"]['Enums']["redemption_status"] }; Returns: undefined
+                           },
+"evaluate_achievements":
+{ Args: { "p_service": string,"p_user": string }; Returns: number
+                           },
 "find_user_by_phone":
 { Args: { "p_phone": string }; Returns: {
               "full_name": string,"id": string
@@ -725,6 +748,9 @@ isOneToOne: false
               "avatar_url": string,"class_id": string,"class_name": string,"full_name": string,"last_visit_at": string,"last_visit_type": Database["public"]['Enums']["visit_type"],"phone": string,"served_id": string,"visits_count": number
             }[]
                            },
+"my_available_points":
+{ Args: { "p_service": string }; Returns: number
+                           },
 "my_points":
 { Args: { "p_service": string }; Returns: {
               "class_id": string,"class_rank": number,"class_total": number,"role": Database["public"]['Enums']["member_role"],"service_rank": number,"service_total": number
@@ -740,6 +766,9 @@ isOneToOne: false
                            },
 "prep_session_service_id":
 { Args: { "p_session": string }; Returns: string
+                           },
+"redeem_gift":
+{ Args: { "p_gift": string }; Returns: string
                            },
 "regenerate_join_code":
 { Args: { "p_code_id": string }; Returns: string

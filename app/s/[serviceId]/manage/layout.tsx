@@ -37,6 +37,9 @@ export default async function ManageLayout({
           { href: `${base}/visits`, label: t.tabs.visits },
           { href: `${base}/prep`, label: t.tabs.prep },
           { href: `${base}/competitions`, label: t.tabs.competitions },
+          { href: `${base}/posts`, label: t.tabs.posts },
+          { href: `${base}/gifts`, label: t.tabs.gifts },
+          { href: `${base}/achievements`, label: t.tabs.achievements },
         ]}
       />
       {children}

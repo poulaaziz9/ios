@@ -173,11 +173,5 @@ insert into public.achievements (service_id, name, description, icon, criteria) 
   ('20000000-0000-4000-a000-000000000001', 'نجم الخدمة', 'اجمع ١٠٠ نقطة', 'star', '{"type":"points_total","gte":100}'),
   ('20000000-0000-4000-a000-000000000001', 'أول خطوة', 'اجمع أول ٢٠ نقطة', 'sparkles', '{"type":"points_total","gte":20}');
 
-insert into public.user_achievements (achievement_id, user_id)
-select a.id, pl.user_id
-from public.achievements a
-join (
-  select user_id, sum(points) as total from public.points_ledger
-  where service_id = '20000000-0000-4000-a000-000000000001' group by user_id
-) pl on pl.total >= (a.criteria ->> 'gte')::int
-where a.service_id = '20000000-0000-4000-a000-000000000001';
+-- user_achievements are awarded by the achievements engine (phase 8 triggers)
+-- as soon as the definitions above are inserted.

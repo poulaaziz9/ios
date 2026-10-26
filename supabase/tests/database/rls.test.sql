@@ -790,6 +790,84 @@ select throws_ok(format($$select * from public.submit_competition(%L, '{}')$$, t
 reset role;
 
 -- ===========================================================================
+-- Phase 8: gifts and achievements
+-- ===========================================================================
+insert into public.gifts (id, service_id, name, cost_points, stock) values
+  (tests.new_id('gift_cheap'), tests.uid('svc_a1'), 'cheap', 5, 1),
+  (tests.new_id('gift_pricey'), tests.uid('svc_a1'), 'pricey', 1000, null);
+select tests.new_id('redemption1');
+
+select tests.as_user('newkid');
+select throws_ok(format('select public.redeem_gift(%L)', tests.uid('gift_pricey')), 'P0001', 'insufficient_points',
+  'redeem_gift: needs enough points');
+select throws_ok(format('select public.redeem_gift(%L)', tests.uid('gift_off')), 'P0001', 'unavailable',
+  'redeem_gift: inactive gifts');
+update tests.ids set id = public.redeem_gift(tests.uid('gift_cheap')) where name = 'redemption1';
+select ok(tests.uid('redemption1') is not null, 'redeem_gift: request created');
+select is(
+  public.my_available_points(tests.uid('svc_a1')),
+  (select sum(points)::int from public.points_ledger where user_id = tests.uid('newkid') and service_id = tests.uid('svc_a1')) - 5,
+  'redeem_gift: request reserves the points');
+select throws_ok(format('select public.decide_redemption(%L, ''approved'')', tests.uid('redemption1')), '42501', null,
+  'decide_redemption: admins only');
+reset role;
+select tests.as_user('kid_y');
+select throws_ok(format('select public.redeem_gift(%L)', tests.uid('gift_cheap')), 'P0001', 'out_of_stock',
+  'redeem_gift: pending requests count against stock');
+reset role;
+select tests.as_user('kid_b');
+select throws_ok(format('select public.redeem_gift(%L)', tests.uid('gift_cheap')), '42501', null,
+  'redeem_gift: served members only');
+reset role;
+
+select tests.as_user('admin_a1');
+select lives_ok(format('select public.decide_redemption(%L, ''approved'')', tests.uid('redemption1')),
+  'decide_redemption: admin approves');
+select is(
+  (select points from public.points_ledger where source_id = tests.uid('redemption1')),
+  -5, 'decide_redemption: approval debits the ledger');
+select is((select stock from public.gifts where id = tests.uid('gift_cheap')), 0, 'decide_redemption: approval takes stock');
+select throws_ok(format('select public.decide_redemption(%L, ''approved'')', tests.uid('redemption1')),
+  'P0001', 'invalid_transition', 'decide_redemption: no double approval');
+select throws_ok(
+  format('select public.reverse_points(%L)', (select id from public.points_ledger where source_id = tests.uid('redemption1'))),
+  '22023', null, 'reverse_points: gift debits are undone by rejecting the request');
+select lives_ok(format('select public.decide_redemption(%L, ''rejected'')', tests.uid('redemption1')),
+  'decide_redemption: an approved request can be rejected');
+select is(
+  (select sum(points)::int from public.points_ledger where source_id = tests.uid('redemption1')),
+  0, 'decide_redemption: rejecting after approval refunds');
+select is((select stock from public.gifts where id = tests.uid('gift_cheap')), 1, 'decide_redemption: refund returns stock');
+reset role;
+
+-- Achievements engine
+insert into public.point_rules (service_id, reason, points) values (tests.uid('svc_a1'), 'achievement', 20)
+  on conflict (service_id, reason) do update set points = excluded.points;
+select throws_ok(
+  format($$insert into public.achievements (service_id, name, criteria) values (%L, 'bad', '{"type":"nope","gte":1}')$$, tests.uid('svc_a1')),
+  '23514', null, 'achievements: criteria are validated');
+insert into public.achievements (id, service_id, name, criteria) values
+  (tests.new_id('ach_points'), tests.uid('svc_a1'), 'points', '{"type":"points_total","gte":1}'),
+  (tests.new_id('ach_comps'), tests.uid('svc_a1'), 'comps', '{"type":"competitions_count","gte":2}');
+select ok(exists (select 1 from public.user_achievements where achievement_id = tests.uid('ach_points') and user_id = tests.uid('newkid')),
+  'achievements: new definition is evaluated for existing members');
+select ok(exists (select 1 from public.user_achievements where achievement_id = tests.uid('ach_comps') and user_id = tests.uid('newkid')),
+  'achievements: competitions_count criterion');
+select is(
+  (select count(*)::int from public.points_ledger where reason = 'achievement' and user_id = tests.uid('newkid')
+     and source_id in (select id from public.user_achievements where user_id = tests.uid('newkid'))),
+  2, 'achievements: each new achievement credits the achievement rule');
+insert into public.achievements (id, service_id, name, criteria) values
+  (tests.new_id('ach_visits'), tests.uid('svc_a1'), 'visits', '{"type":"visits_count","gte":1}');
+insert into public.servant_assignments (service_id, servant_id, served_id)
+  values (tests.uid('svc_a1'), tests.uid('kid_b'), tests.uid('newkid'));
+select tests.as_user('kid_b');
+select lives_ok(format($$select public.log_visit(%L, %L, 'call')$$, tests.uid('svc_a1'), tests.uid('newkid')), 'servant logs a visit');
+reset role;
+select ok(exists (select 1 from public.user_achievements where achievement_id = tests.uid('ach_visits') and user_id = tests.uid('kid_b')),
+  'achievements: awarded right after the qualifying activity');
+
+-- ===========================================================================
 -- Cascade: super admin deletes a church with everything under it
 -- ===========================================================================
 select tests.as_user('super');
