@@ -12,7 +12,7 @@ select no_plan();
 create schema tests;
 create table tests.ids (name text primary key, id uuid not null default gen_random_uuid());
 grant usage on schema tests to anon, authenticated;
-grant select on tests.ids to anon, authenticated;
+grant select, insert, update on tests.ids to anon, authenticated;
 
 -- Fixture id by name (created on first use).
 create function tests.uid(p_name text) returns uuid language sql as $$
@@ -603,6 +603,49 @@ select throws_ok($$ select public.join_with_code('TESTA1X') $$, 'P0001', 'staff'
 reset role;
 set local role anon;
 select throws_ok($$ select public.join_with_code('TESTA1X') $$, '42501', null, 'join_with_code: anon cannot join');
+reset role;
+
+-- ===========================================================================
+-- Phase 5: points
+-- ===========================================================================
+select tests.as_user('admin_a1');
+select tests.new_id('award1');
+update tests.ids set id = public.award_points(tests.uid('svc_a1'), tests.uid('kid_y'), 15, 'manual', 'حفظ')
+  where name = 'award1';
+select is(
+  (select row(class_id, points, created_by)::text from public.points_ledger where id = tests.uid('award1')),
+  row(tests.uid('class_a1y'), 15, tests.uid('admin_a1'))::text,
+  'award_points: entry attributed to member''s class and admin');
+select throws_ok(format('select public.award_points(%L, %L, 5)', tests.uid('svc_a1'), tests.uid('outsider')),
+  '22023', 'not a member', 'award_points: only members of the service');
+select throws_ok(format('select public.award_points(%L, %L, 0)', tests.uid('svc_a1'), tests.uid('kid_y')),
+  '22023', null, 'award_points: zero not allowed');
+select throws_ok(format($$select public.award_points(%L, %L, 5, 'visit')$$, tests.uid('svc_a1'), tests.uid('kid_y')),
+  '22023', 'reason not allowed', 'award_points: visit points only via log_visit');
+select throws_ok(format('select public.award_points(%L, %L, 5)', tests.uid('svc_b1'), tests.uid('kid_b')),
+  '42501', null, 'award_points: not in other services');
+select is(
+  public.award_points_many(tests.uid('svc_a1'), array[tests.uid('kid_y'), tests.uid('newkid')], 5),
+  2, 'award_points_many: awards each member');
+select lives_ok(format('select public.reverse_points(%L)', tests.uid('award1')), 'reverse_points: admin corrects an entry');
+select is(
+  (select points from public.points_ledger where source_id = tests.uid('award1')),
+  -15, 'reverse_points: equal and opposite entry');
+select throws_ok(format('select public.reverse_points(%L)', tests.uid('award1')), '23505', null,
+  'reverse_points: only once');
+select throws_ok(
+  format('select public.reverse_points(%L)', (select id from public.points_ledger where source_id = tests.uid('award1'))),
+  '22023', null, 'reverse_points: a correction cannot be reversed');
+reset role;
+
+select tests.as_user('kid_y');
+select is((select service_total from public.my_points(tests.uid('svc_a1'))), 25, 'my_points: service total (20 + 15 + 5 − 15)');
+select is((select class_total from public.my_points(tests.uid('svc_a1'))), 25, 'my_points: class total');
+select throws_ok(format('select public.award_points(%L, %L, 100)', tests.uid('svc_a1'), tests.uid('kid_y')),
+  '42501', null, 'award_points: kids cannot award themselves');
+select throws_ok(
+  format($$select public.ledger_add(%L, %L, 100, 'manual')$$, tests.uid('svc_a1'), tests.uid('kid_y')),
+  '42501', null, 'ledger_add: internal, not callable');
 reset role;
 
 -- ===========================================================================

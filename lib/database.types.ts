@@ -606,6 +606,12 @@ isOneToOne: false
             "achievement_service_id":
 { Args: { "p_achievement": string }; Returns: string
                            },
+"award_points":
+{ Args: { "p_note"?: string,"p_points": number,"p_reason"?: Database["public"]['Enums']["point_reason"],"p_service": string,"p_user": string }; Returns: string
+                           },
+"award_points_many":
+{ Args: { "p_note"?: string,"p_points": number,"p_reason"?: Database["public"]['Enums']["point_reason"],"p_service": string,"p_users": (string)[] }; Returns: number
+                           },
 "cairo_end_of_day":
 { Args: { "p_date": string }; Returns: string
                            },
@@ -696,6 +702,17 @@ isOneToOne: false
 "join_with_code":
 { Args: { "p_code": string }; Returns: string
                            },
+"ledger_add":
+{ Args: { "p_note"?: string,"p_points": number,"p_reason": Database["public"]['Enums']["point_reason"],"p_service": string,"p_source"?: string,"p_user": string }; Returns: string
+                           },
+"member_class_id":
+{ Args: { "p_service": string,"p_user": string }; Returns: string
+                           },
+"my_points":
+{ Args: { "p_service": string }; Returns: {
+              "class_id": string,"class_rank": number,"class_total": number,"role": Database["public"]['Enums']["member_role"],"service_rank": number,"service_total": number
+            }[]
+                           },
 "normalize_join_code":
 { Args: { "p_code": string }; Returns: string
                            },
@@ -707,6 +724,12 @@ isOneToOne: false
                            },
 "remove_church_servant":
 { Args: { "p_church": string,"p_user": string }; Returns: undefined
+                           },
+"reverse_points":
+{ Args: { "p_entry": string,"p_note"?: string }; Returns: string
+                           },
+"rule_points":
+{ Args: { "p_reason": Database["public"]['Enums']["point_reason"],"p_service": string }; Returns: number
                            },
 "search_users":
 { Args: { "p_query": string }; Returns: {

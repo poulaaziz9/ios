@@ -33,6 +33,7 @@ export default async function ManageLayout({
           { href: `${base}/classes`, label: t.tabs.classes },
           { href: `${base}/members`, label: t.tabs.members },
           { href: `${base}/codes`, label: t.tabs.codes },
+          { href: `${base}/points`, label: t.tabs.points },
         ]}
       />
       {children}

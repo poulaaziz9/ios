@@ -154,3 +154,53 @@ export async function deleteCode(serviceId: string, codeId: string) {
   await supabase.from("join_codes").delete().eq("id", codeId);
   revalidate(serviceId);
 }
+
+// ---------------------------------------------------------------------------
+// Points
+// ---------------------------------------------------------------------------
+export async function awardPoints(
+  serviceId: string,
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const users = formData.getAll("user_id").map(String);
+  const points = Number.parseInt(text(formData, "points"), 10);
+  const reason = text(formData, "reason") === "attendance" ? "attendance" : "manual";
+  if (!users.length) return { error: strings.points.noneSelected };
+  if (!Number.isFinite(points) || points === 0) return { error: strings.points.zeroPoints };
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("award_points_many", {
+    p_service: serviceId,
+    p_users: users,
+    p_points: points,
+    p_reason: reason,
+    p_note: text(formData, "note") || undefined,
+  });
+  revalidate(serviceId);
+  return fromError(error);
+}
+
+export async function reversePoints(serviceId: string, entryId: string) {
+  const supabase = await createClient();
+  await supabase.rpc("reverse_points", { p_entry: entryId });
+  revalidate(serviceId);
+}
+
+const RULE_REASONS = ["visit", "preparation", "achievement"] as const;
+export type RuleReason = (typeof RULE_REASONS)[number];
+
+export async function saveRules(
+  serviceId: string,
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const rows = RULE_REASONS.map((reason) => ({
+    service_id: serviceId,
+    reason,
+    points: Math.max(0, Number.parseInt(text(formData, reason), 10) || 0),
+  }));
+  const supabase = await createClient();
+  const { error } = await supabase.from("point_rules").upsert(rows, { onConflict: "service_id,reason" });
+  revalidate(serviceId);
+  return error ? fromError(error) : { ok: true };
+}
