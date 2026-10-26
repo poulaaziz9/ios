@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
-import { expiryDay, formatDate, toCairoDateInput } from "@/lib/format";
+import { expiryDay, formatDate, isPast, toCairoDateInput } from "@/lib/format";
 import { joinUrl, qrPngDataUrl, qrSvg } from "@/lib/qr";
 import { strings } from "@/lib/strings";
 import { createClient } from "@/lib/supabase/server";
@@ -22,8 +22,6 @@ import {
 } from "../actions";
 
 const t = strings.manage;
-
-const isPast = (ts: string | null) => ts !== null && new Date(ts).getTime() <= Date.now();
 
 export default async function ManageCodesPage({
   params,

@@ -729,6 +729,67 @@ insert into public.points_ledger (service_id, user_id, points, reason, source_id
 values (tests.uid('svc_b1'), tests.uid('church_admin_b'), 10, 'visit', tests.uid('visit_b'));
 
 -- ===========================================================================
+-- Phase 7: competitions
+-- ===========================================================================
+select tests.as_user('admin_a1');
+select tests.new_id('comp_new');
+update tests.ids set id = public.save_competition(null, tests.uid('svc_a1'), null, 'جديدة', null,
+  '2026-11-01 18:00', null, 0) where name = 'comp_new';
+select is(
+  (select starts_at from public.competitions where id = tests.uid('comp_new')),
+  '2026-11-01 16:00+00'::timestamptz, 'save_competition: start time is Cairo local time');
+select throws_ok(
+  format($$select public.save_competition(null, %L, null, 'x', null, null, null, 0)$$, tests.uid('svc_b1')),
+  '42501', null, 'save_competition: admins of the service only');
+reset role;
+
+insert into public.competitions (id, service_id, title, starts_at, ends_at, is_published, max_points) values
+  (tests.new_id('comp_closed'), tests.uid('svc_a1'), 'closed', now() - interval '2 days', now() - interval '1 day', true, 0),
+  (tests.new_id('comp_capped'), tests.uid('svc_a1'), 'capped', now() - interval '1 hour', null, true, 1);
+insert into public.competition_questions (competition_id, question, options, correct_index, points) values
+  (tests.uid('comp_closed'), 'q', '["a","b"]', 0, 5),
+  (tests.uid('comp_capped'), 'q1', '["a","b"]', 0, 1),
+  (tests.uid('comp_capped'), 'q2', '["a","b"]', 1, 1);
+-- Perfect answers, computed as postgres (kids cannot read correct_index).
+create table tests.capped_key as
+  select jsonb_object_agg(id::text, correct_index) as answers
+  from public.competition_questions where competition_id = tests.uid('comp_capped');
+grant select on tests.capped_key to authenticated;
+
+select tests.as_user('newkid');
+select is(
+  (select row(score, correct, total)::text from public.submit_competition(tests.uid('comp_live'),
+    jsonb_build_object(
+      (select id from public.competition_questions where competition_id = tests.uid('comp_live') and question = 'q1')::text, 1,
+      (select id from public.competition_questions where competition_id = tests.uid('comp_live') and question = 'q2')::text, 0))),
+  row(1, 1, 2)::text, 'submit_competition: graded on the server');
+select is(
+  (select points from public.points_ledger where reason = 'competition' and user_id = tests.uid('newkid')),
+  1, 'submit_competition: score credited to the ledger');
+select throws_ok(format($$select * from public.submit_competition(%L, '{}')$$, tests.uid('comp_live')),
+  'P0001', 'already_submitted', 'submit_competition: one attempt');
+select throws_ok(format($$select * from public.submit_competition(%L, '{}')$$, tests.uid('comp_draft')),
+  '42501', null, 'submit_competition: not for drafts');
+select throws_ok(format($$select * from public.submit_competition(%L, '{}')$$, tests.uid('comp_future')),
+  '42501', null, 'submit_competition: not before it starts');
+select throws_ok(format($$select * from public.submit_competition(%L, '{}')$$, tests.uid('comp_closed')),
+  'P0001', 'closed', 'submit_competition: not after it ends');
+select is(
+  (select score from public.submit_competition(tests.uid('comp_capped'), (select answers from tests.capped_key))),
+  1, 'submit_competition: score capped at max_points');
+reset role;
+
+select tests.as_user('kid_y');
+select is(
+  (select row(score, correct)::text from public.submit_competition(tests.uid('comp_capped'), '{"x": 0, "y": "a"}')),
+  row(0, 0)::text, 'submit_competition: malformed answers count as wrong');
+reset role;
+select tests.as_user('kid_b'); -- a servant (not served) in svc_a1
+select throws_ok(format($$select * from public.submit_competition(%L, '{}')$$, tests.uid('comp_capped')),
+  '42501', null, 'submit_competition: served members only');
+reset role;
+
+-- ===========================================================================
 -- Cascade: super admin deletes a church with everything under it
 -- ===========================================================================
 select tests.as_user('super');

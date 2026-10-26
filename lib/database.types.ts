@@ -753,6 +753,9 @@ isOneToOne: false
 "rule_points":
 { Args: { "p_reason": Database["public"]['Enums']["point_reason"],"p_service": string }; Returns: number
                            },
+"save_competition":
+{ Args: { "p_class": string,"p_description": string,"p_ends_local": string,"p_id": string,"p_max_points": number,"p_service": string,"p_starts_local": string,"p_title": string }; Returns: string
+                           },
 "search_users":
 { Args: { "p_query": string }; Returns: {
               "full_name": string,"id": string,"phone": string
@@ -771,6 +774,11 @@ isOneToOne: false
                            },
 "set_servant_services":
 { Args: { "p_church": string,"p_services": (string)[],"p_user": string }; Returns: undefined
+                           },
+"submit_competition":
+{ Args: { "p_answers": Json,"p_competition": string }; Returns: {
+              "correct": number,"score": number,"total": number
+            }[]
                            },
 "try_uuid":
 { Args: { "p_text": string }; Returns: string

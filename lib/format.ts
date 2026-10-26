@@ -45,3 +45,38 @@ export function cairoNoon(day: string) {
 export function isOlderThan(value: string | null | undefined, days: number) {
   return !value || Date.now() - new Date(value).getTime() > days * 86_400_000;
 }
+
+/** "yyyy-mm-ddThh:mm" in Cairo (for <input type="datetime-local">). */
+export function toCairoDateTimeInput(value: string | Date) {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Africa/Cairo",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    })
+      .formatToParts(new Date(value))
+      .map((p) => [p.type, p.value]),
+  );
+  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+}
+
+const dateTimeFmt = new Intl.DateTimeFormat("ar-EG", {
+  timeZone: "Africa/Cairo",
+  day: "numeric",
+  month: "long",
+  hour: "numeric",
+  minute: "2-digit",
+});
+
+export function formatDateTime(value: string | Date) {
+  return dateTimeFmt.format(new Date(value));
+}
+
+/** True if the timestamp is set and already passed. */
+export function isPast(value: string | null | undefined) {
+  return !!value && new Date(value).getTime() <= Date.now();
+}

@@ -273,3 +273,85 @@ export async function markAttendance(
   });
   revalidate(serviceId);
 }
+
+// ---------------------------------------------------------------------------
+// Competitions
+// ---------------------------------------------------------------------------
+/** Create (competitionId = null) or update. Times are Cairo wall-clock. */
+export async function saveCompetition(
+  serviceId: string,
+  competitionId: string | null,
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const title = text(formData, "title");
+  if (!title) return { error: strings.common.nameRequired };
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("save_competition", {
+    p_id: competitionId as string,
+    p_service: serviceId,
+    p_class: (text(formData, "class_id") || null) as string,
+    p_title: title,
+    p_description: text(formData, "description"),
+    p_starts_local: (text(formData, "starts_at") || null) as string,
+    p_ends_local: (text(formData, "ends_at") || null) as string,
+    p_max_points: Number.parseInt(text(formData, "max_points"), 10) || 0,
+  });
+  if (error) return fromError(error);
+  revalidate(serviceId);
+  if (!competitionId) redirect(`/s/${serviceId}/manage/competitions/${data}`);
+  return { ok: true };
+}
+
+export async function setCompetitionPublished(serviceId: string, competitionId: string, published: boolean) {
+  const supabase = await createClient();
+  await supabase.from("competitions").update({ is_published: published }).eq("id", competitionId);
+  revalidate(serviceId);
+}
+
+export async function deleteCompetition(serviceId: string, competitionId: string) {
+  const supabase = await createClient();
+  await supabase.from("competitions").delete().eq("id", competitionId).eq("service_id", serviceId);
+  revalidate(serviceId);
+  redirect(`/s/${serviceId}/manage/competitions`);
+}
+
+export async function addQuestion(
+  serviceId: string,
+  competitionId: string,
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const question = text(formData, "question");
+  const correctRaw = Number.parseInt(text(formData, "correct"), 10);
+  // Keep only filled options, remembering where the "correct" one landed.
+  const raw = Array.from({ length: 6 }, (_, i) => text(formData, `option_${i}`));
+  const options = raw.filter(Boolean);
+  const correct = raw[correctRaw] ? options.indexOf(raw[correctRaw]) : -1;
+  if (!question || options.length < 2 || correct < 0) return { error: strings.competitions.needTwoOptions };
+
+  const supabase = await createClient();
+  const { data: last } = await supabase
+    .from("competition_questions")
+    .select("sort_order")
+    .eq("competition_id", competitionId)
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const { error } = await supabase.from("competition_questions").insert({
+    competition_id: competitionId,
+    question,
+    options,
+    correct_index: correct,
+    points: Math.max(0, Number.parseInt(text(formData, "points"), 10) || 0),
+    sort_order: (last?.sort_order ?? 0) + 1,
+  });
+  revalidate(serviceId);
+  return fromError(error);
+}
+
+export async function deleteQuestion(serviceId: string, questionId: string) {
+  const supabase = await createClient();
+  await supabase.from("competition_questions").delete().eq("id", questionId);
+  revalidate(serviceId);
+}

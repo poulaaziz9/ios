@@ -36,6 +36,7 @@ export default async function ManageLayout({
           { href: `${base}/points`, label: t.tabs.points },
           { href: `${base}/visits`, label: t.tabs.visits },
           { href: `${base}/prep`, label: t.tabs.prep },
+          { href: `${base}/competitions`, label: t.tabs.competitions },
         ]}
       />
       {children}
