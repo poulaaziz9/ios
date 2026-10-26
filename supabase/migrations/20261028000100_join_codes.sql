@@ -2,7 +2,6 @@
 -- Decision (owner, phase 4): every join code belongs to a class. There is no
 -- service-level code, so kids always join straight into a class as active.
 
-delete from public.join_codes where class_id is null;
 alter table public.join_codes alter column class_id set not null;
 
 -- ---------------------------------------------------------------------------
