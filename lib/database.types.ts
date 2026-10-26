@@ -23,7 +23,379 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "profiles": {
+            "achievements": {
+                  Row: {
+                    "created_at": string,"criteria": NonNullable<Json>,"description": string | null,"icon": string | null,"id": string,"name": string,"service_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"criteria"?: NonNullable<Json>,"description"?: string | null,"icon"?: string | null,"id"?: string,"name": string,"service_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"criteria"?: NonNullable<Json>,"description"?: string | null,"icon"?: string | null,"id"?: string,"name"?: string,"service_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "achievements_service_id_fkey"
+      columns: ["service_id"]
+isOneToOne: false
+      referencedRelation: "services"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"church_roles": {
+                  Row: {
+                    "church_id": string,"created_at": string,"id": string,"role": Database["public"]['Enums']["church_role"],"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "church_id": string,"created_at"?: string,"id"?: string,"role": Database["public"]['Enums']["church_role"],"user_id": string
+                  }
+                  Update: {
+                    "church_id"?: string,"created_at"?: string,"id"?: string,"role"?: Database["public"]['Enums']["church_role"],"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "church_roles_church_id_fkey"
+      columns: ["church_id"]
+isOneToOne: false
+      referencedRelation: "churches"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "church_roles_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"churches": {
+                  Row: {
+                    "address": string | null,"created_at": string,"created_by": string | null,"id": string,"name": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "address"?: string | null,"created_at"?: string,"created_by"?: string | null,"id"?: string,"name": string
+                  }
+                  Update: {
+                    "address"?: string | null,"created_at"?: string,"created_by"?: string | null,"id"?: string,"name"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "churches_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"classes": {
+                  Row: {
+                    "created_at": string,"id": string,"name": string,"service_id": string,"sort_order": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"name": string,"service_id": string,"sort_order"?: number
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"name"?: string,"service_id"?: string,"sort_order"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "classes_service_id_fkey"
+      columns: ["service_id"]
+isOneToOne: false
+      referencedRelation: "services"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"competition_entries": {
+                  Row: {
+                    "answers": NonNullable<Json>,"competition_id": string,"created_at": string,"id": string,"score": number,"submitted_at": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "answers"?: NonNullable<Json>,"competition_id": string,"created_at"?: string,"id"?: string,"score"?: number,"submitted_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "answers"?: NonNullable<Json>,"competition_id"?: string,"created_at"?: string,"id"?: string,"score"?: number,"submitted_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "competition_entries_competition_id_fkey"
+      columns: ["competition_id"]
+isOneToOne: false
+      referencedRelation: "competitions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "competition_entries_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"competition_questions": {
+                  Row: {
+                    "competition_id": string,"correct_index": number,"created_at": string,"id": string,"options": NonNullable<Json>,"points": number,"question": string,"sort_order": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "competition_id": string,"correct_index": number,"created_at"?: string,"id"?: string,"options": NonNullable<Json>,"points"?: number,"question": string,"sort_order"?: number
+                  }
+                  Update: {
+                    "competition_id"?: string,"correct_index"?: number,"created_at"?: string,"id"?: string,"options"?: NonNullable<Json>,"points"?: number,"question"?: string,"sort_order"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "competition_questions_competition_id_fkey"
+      columns: ["competition_id"]
+isOneToOne: false
+      referencedRelation: "competitions"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"competitions": {
+                  Row: {
+                    "class_id": string | null,"created_at": string,"description": string | null,"ends_at": string | null,"id": string,"is_published": boolean,"max_points": number,"service_id": string,"starts_at": string | null,"title": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "class_id"?: string | null,"created_at"?: string,"description"?: string | null,"ends_at"?: string | null,"id"?: string,"is_published"?: boolean,"max_points"?: number,"service_id": string,"starts_at"?: string | null,"title": string
+                  }
+                  Update: {
+                    "class_id"?: string | null,"created_at"?: string,"description"?: string | null,"ends_at"?: string | null,"id"?: string,"is_published"?: boolean,"max_points"?: number,"service_id"?: string,"starts_at"?: string | null,"title"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "competitions_class_id_service_id_fkey"
+      columns: ["class_id","service_id"]
+isOneToOne: false
+      referencedRelation: "classes"
+      referencedColumns: ["id","service_id"]
+    },{
+      foreignKeyName: "competitions_service_id_fkey"
+      columns: ["service_id"]
+isOneToOne: false
+      referencedRelation: "services"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"gift_redemptions": {
+                  Row: {
+                    "created_at": string,"gift_id": string,"id": string,"status": Database["public"]['Enums']["redemption_status"],"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"gift_id": string,"id"?: string,"status"?: Database["public"]['Enums']["redemption_status"],"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"gift_id"?: string,"id"?: string,"status"?: Database["public"]['Enums']["redemption_status"],"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "gift_redemptions_gift_id_fkey"
+      columns: ["gift_id"]
+isOneToOne: false
+      referencedRelation: "gifts"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "gift_redemptions_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"gifts": {
+                  Row: {
+                    "cost_points": number,"created_at": string,"id": string,"image_url": string | null,"is_active": boolean,"name": string,"service_id": string,"stock": number | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "cost_points": number,"created_at"?: string,"id"?: string,"image_url"?: string | null,"is_active"?: boolean,"name": string,"service_id": string,"stock"?: number | null
+                  }
+                  Update: {
+                    "cost_points"?: number,"created_at"?: string,"id"?: string,"image_url"?: string | null,"is_active"?: boolean,"name"?: string,"service_id"?: string,"stock"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "gifts_service_id_fkey"
+      columns: ["service_id"]
+isOneToOne: false
+      referencedRelation: "services"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"join_codes": {
+                  Row: {
+                    "class_id": string | null,"code": string,"created_at": string,"created_by": string | null,"expires_at": string | null,"id": string,"is_active": boolean,"service_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "class_id"?: string | null,"code": string,"created_at"?: string,"created_by"?: string | null,"expires_at"?: string | null,"id"?: string,"is_active"?: boolean,"service_id": string
+                  }
+                  Update: {
+                    "class_id"?: string | null,"code"?: string,"created_at"?: string,"created_by"?: string | null,"expires_at"?: string | null,"id"?: string,"is_active"?: boolean,"service_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "join_codes_class_id_service_id_fkey"
+      columns: ["class_id","service_id"]
+isOneToOne: false
+      referencedRelation: "classes"
+      referencedColumns: ["id","service_id"]
+    },{
+      foreignKeyName: "join_codes_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "join_codes_service_id_fkey"
+      columns: ["service_id"]
+isOneToOne: false
+      referencedRelation: "services"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"point_rules": {
+                  Row: {
+                    "created_at": string,"points": number,"reason": Database["public"]['Enums']["point_reason"],"service_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"points": number,"reason": Database["public"]['Enums']["point_reason"],"service_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"points"?: number,"reason"?: Database["public"]['Enums']["point_reason"],"service_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "point_rules_service_id_fkey"
+      columns: ["service_id"]
+isOneToOne: false
+      referencedRelation: "services"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"points_ledger": {
+                  Row: {
+                    "class_id": string | null,"created_at": string,"created_by": string | null,"id": string,"note": string | null,"points": number,"reason": Database["public"]['Enums']["point_reason"],"service_id": string,"source_id": string | null,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "class_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"id"?: string,"note"?: string | null,"points": number,"reason": Database["public"]['Enums']["point_reason"],"service_id": string,"source_id"?: string | null,"user_id": string
+                  }
+                  Update: {
+                    "class_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"id"?: string,"note"?: string | null,"points"?: number,"reason"?: Database["public"]['Enums']["point_reason"],"service_id"?: string,"source_id"?: string | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "points_ledger_class_id_service_id_fkey"
+      columns: ["class_id","service_id"]
+isOneToOne: false
+      referencedRelation: "classes"
+      referencedColumns: ["id","service_id"]
+    },{
+      foreignKeyName: "points_ledger_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "points_ledger_service_id_fkey"
+      columns: ["service_id"]
+isOneToOne: false
+      referencedRelation: "services"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "points_ledger_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"posts": {
+                  Row: {
+                    "author_id": string | null,"body": string,"class_id": string | null,"created_at": string,"id": string,"image_url": string | null,"service_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "author_id"?: string | null,"body"?: string,"class_id"?: string | null,"created_at"?: string,"id"?: string,"image_url"?: string | null,"service_id": string
+                  }
+                  Update: {
+                    "author_id"?: string | null,"body"?: string,"class_id"?: string | null,"created_at"?: string,"id"?: string,"image_url"?: string | null,"service_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "posts_author_id_fkey"
+      columns: ["author_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "posts_class_id_service_id_fkey"
+      columns: ["class_id","service_id"]
+isOneToOne: false
+      referencedRelation: "classes"
+      referencedColumns: ["id","service_id"]
+    },{
+      foreignKeyName: "posts_service_id_fkey"
+      columns: ["service_id"]
+isOneToOne: false
+      referencedRelation: "services"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"prep_attendance": {
+                  Row: {
+                    "checked_in_at": string,"created_at": string,"id": string,"servant_id": string,"session_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "checked_in_at"?: string,"created_at"?: string,"id"?: string,"servant_id": string,"session_id": string
+                  }
+                  Update: {
+                    "checked_in_at"?: string,"created_at"?: string,"id"?: string,"servant_id"?: string,"session_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "prep_attendance_servant_id_fkey"
+      columns: ["servant_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "prep_attendance_session_id_fkey"
+      columns: ["session_id"]
+isOneToOne: false
+      referencedRelation: "prep_sessions"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"prep_sessions": {
+                  Row: {
+                    "created_at": string,"id": string,"service_id": string,"session_date": string,"title": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"service_id": string,"session_date": string,"title": string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"service_id"?: string,"session_date"?: string,"title"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "prep_sessions_service_id_fkey"
+      columns: ["service_id"]
+isOneToOne: false
+      referencedRelation: "services"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"profiles": {
                   Row: {
                     "avatar_url": string | null,"created_at": string,"full_name": string,"id": string,"is_super_admin": boolean,"phone": string | null
                   }
@@ -37,16 +409,262 @@ export type Database = {
                   Relationships: [
                     
                   ]
+                },"servant_assignments": {
+                  Row: {
+                    "created_at": string,"id": string,"servant_id": string,"served_id": string,"service_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"servant_id": string,"served_id": string,"service_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"servant_id"?: string,"served_id"?: string,"service_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "servant_assignments_servant_id_fkey"
+      columns: ["servant_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "servant_assignments_served_id_fkey"
+      columns: ["served_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "servant_assignments_service_id_fkey"
+      columns: ["service_id"]
+isOneToOne: false
+      referencedRelation: "services"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"service_members": {
+                  Row: {
+                    "class_id": string | null,"created_at": string,"id": string,"role": Database["public"]['Enums']["member_role"],"service_id": string,"status": Database["public"]['Enums']["member_status"],"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "class_id"?: string | null,"created_at"?: string,"id"?: string,"role": Database["public"]['Enums']["member_role"],"service_id": string,"status"?: Database["public"]['Enums']["member_status"],"user_id": string
+                  }
+                  Update: {
+                    "class_id"?: string | null,"created_at"?: string,"id"?: string,"role"?: Database["public"]['Enums']["member_role"],"service_id"?: string,"status"?: Database["public"]['Enums']["member_status"],"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "service_members_class_id_service_id_fkey"
+      columns: ["class_id","service_id"]
+isOneToOne: false
+      referencedRelation: "classes"
+      referencedColumns: ["id","service_id"]
+    },{
+      foreignKeyName: "service_members_service_id_fkey"
+      columns: ["service_id"]
+isOneToOne: false
+      referencedRelation: "services"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "service_members_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"services": {
+                  Row: {
+                    "church_id": string,"created_at": string,"description": string | null,"id": string,"logo_url": string | null,"name": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "church_id": string,"created_at"?: string,"description"?: string | null,"id"?: string,"logo_url"?: string | null,"name": string
+                  }
+                  Update: {
+                    "church_id"?: string,"created_at"?: string,"description"?: string | null,"id"?: string,"logo_url"?: string | null,"name"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "services_church_id_fkey"
+      columns: ["church_id"]
+isOneToOne: false
+      referencedRelation: "churches"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"user_achievements": {
+                  Row: {
+                    "achievement_id": string,"created_at": string,"earned_at": string,"id": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "achievement_id": string,"created_at"?: string,"earned_at"?: string,"id"?: string,"user_id": string
+                  }
+                  Update: {
+                    "achievement_id"?: string,"created_at"?: string,"earned_at"?: string,"id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "user_achievements_achievement_id_fkey"
+      columns: ["achievement_id"]
+isOneToOne: false
+      referencedRelation: "achievements"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "user_achievements_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"visits": {
+                  Row: {
+                    "created_at": string,"id": string,"notes": string | null,"servant_id": string,"served_id": string,"service_id": string,"visit_type": Database["public"]['Enums']["visit_type"],"visited_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"notes"?: string | null,"servant_id": string,"served_id": string,"service_id": string,"visit_type": Database["public"]['Enums']["visit_type"],"visited_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"notes"?: string | null,"servant_id"?: string,"served_id"?: string,"service_id"?: string,"visit_type"?: Database["public"]['Enums']["visit_type"],"visited_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "visits_servant_id_fkey"
+      columns: ["servant_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "visits_served_id_fkey"
+      columns: ["served_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "visits_service_id_fkey"
+      columns: ["service_id"]
+isOneToOne: false
+      referencedRelation: "services"
+      referencedColumns: ["id"]
+    }
+                  ]
                 }
           }
           Views: {
-            [_ in never]: never
+            "v_class_leaderboard": {
+                  Row: {
+                    "avatar_url": string | null,"class_id": string | null,"full_name": string,"rank": number | null,"role": Database["public"]['Enums']["member_role"],"service_id": string,"total_points": number | null,"user_id": string
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "service_members_class_id_service_id_fkey"
+      columns: ["class_id","service_id"]
+isOneToOne: false
+      referencedRelation: "classes"
+      referencedColumns: ["id","service_id"]
+    },{
+      foreignKeyName: "service_members_service_id_fkey"
+      columns: ["service_id"]
+isOneToOne: false
+      referencedRelation: "services"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "service_members_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"v_service_leaderboard": {
+                  Row: {
+                    "avatar_url": string | null,"full_name": string,"rank": number | null,"role": Database["public"]['Enums']["member_role"],"service_id": string,"total_points": number | null,"user_id": string
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "service_members_service_id_fkey"
+      columns: ["service_id"]
+isOneToOne: false
+      referencedRelation: "services"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "service_members_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                }
           }
           Functions: {
-            [_ in never]: never
+            "achievement_service_id":
+{ Args: { "p_achievement": string }; Returns: string
+                           },
+"can_see_church":
+{ Args: { "p_church": string }; Returns: boolean
+                           },
+"can_see_class":
+{ Args: { "p_class": string,"p_service": string }; Returns: boolean
+                           },
+"can_see_competition":
+{ Args: { "p_competition": string }; Returns: boolean
+                           },
+"can_see_profile":
+{ Args: { "p_user": string }; Returns: boolean
+                           },
+"competition_answer_key":
+{ Args: { "p_competition": string }; Returns: {
+              "correct_index": number,"question_id": string
+            }[]
+                           },
+"competition_service_id":
+{ Args: { "p_competition": string }; Returns: string
+                           },
+"gift_service_id":
+{ Args: { "p_gift": string }; Returns: string
+                           },
+"has_service_role":
+{ Args: { "p_role": Database["public"]['Enums']["member_role"],"p_service": string }; Returns: boolean
+                           },
+"is_active_member":
+{ Args: { "p_role": Database["public"]['Enums']["member_role"],"p_service": string,"p_user": string }; Returns: boolean
+                           },
+"is_assigned_servant":
+{ Args: { "p_served": string,"p_service": string }; Returns: boolean
+                           },
+"is_church_admin":
+{ Args: { "p_church": string }; Returns: boolean
+                           },
+"is_service_admin":
+{ Args: { "p_service": string }; Returns: boolean
+                           },
+"is_service_member":
+{ Args: { "p_service": string }; Returns: boolean
+                           },
+"is_super_admin":
+{ Args: Record<PropertyKey, never>; Returns: boolean
+                           },
+"prep_session_service_id":
+{ Args: { "p_session": string }; Returns: string
+                           },
+"service_church_id":
+{ Args: { "p_service": string }; Returns: string
+                           },
+"try_uuid":
+{ Args: { "p_text": string }; Returns: string
+                           },
+"visible_phone":
+{ Args: { "p_user": string }; Returns: string
+                           }
           }
           Enums: {
-            [_ in never]: never
+            "church_role": "church_admin"|"servant","member_role": "service_admin"|"servant"|"served","member_status": "pending"|"active"|"removed","point_reason": "competition"|"visit"|"preparation"|"attendance"|"manual"|"gift_redemption"|"achievement","redemption_status": "requested"|"approved"|"delivered"|"rejected","visit_type": "home"|"call"|"message"|"other"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -166,7 +784,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            
+            "church_role": ["church_admin", "servant"],"member_role": ["service_admin", "servant", "served"],"member_status": ["pending", "active", "removed"],"point_reason": ["competition", "visit", "preparation", "attendance", "manual", "gift_redemption", "achievement"],"redemption_status": ["requested", "approved", "delivered", "rejected"],"visit_type": ["home", "call", "message", "other"]
           }
         }
 } as const

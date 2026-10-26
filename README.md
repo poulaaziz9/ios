@@ -21,6 +21,7 @@ Useful scripts:
 |---|---|
 | `npm run db:reset` | Recreate the local DB from `supabase/migrations` (+ seed) |
 | `npm run db:types` | Regenerate `lib/database.types.ts` from the local DB |
+| `npm run test:db` | RLS test suite (pgTAP, `supabase/tests/database`) |
 | `npm run typecheck` / `npm run lint` | TypeScript / ESLint |
 | `npm run icons` | Regenerate PWA icons in `public/icons` |
 
@@ -31,6 +32,29 @@ Kids sign up with **name + Egyptian mobile + password**. To avoid needing an SMS
 Login accepts either a phone (mapped the same way) or a real email (for admin accounts created with one).
 
 **Hosted Supabase project:** turn **off** Auth → Providers → Email → *Confirm email*, otherwise phone signups wait for a confirmation mail that can never arrive.
+
+## Seed accounts (local only)
+
+`supabase db reset` loads `supabase/seed.sql`. Password for all: `password123`.
+
+| Role | Phone |
+|---|---|
+| Super admin | 01000000001 |
+| Church admin | 01000000002 |
+| Service admin (خدمة إعدادي) | 01000000003 |
+| Servants | 01100000001, 01100000002 |
+| Served ×6 | 01200000001 … 01200000006 |
+
+Join codes: `EADY1A` (أولى إعدادي), `EADY2B` (تانية إعدادي), `EADYALL` (service-level, joins as pending).
+
+## Data access model
+
+Every table has RLS with default deny; see `supabase/migrations/*_rls_*.sql`. Things to know when writing queries:
+
+- **`profiles.phone` and `competition_questions.correct_index` are not selectable** (column grants), so `select("*")` on those tables fails. List the columns. Read phones with `rpc("visible_phone", { p_user })` (self, admins over that user, and their assigned servant only) and answer keys with `rpc("competition_answer_key", { p_competition })` (service admins only).
+- **No direct writes** to `points_ledger`, `visits`, `prep_attendance`, `competition_entries`, `gift_redemptions`, `user_achievements`. These are written by `SECURITY DEFINER` RPCs that add the matching ledger entry (phases 4–8).
+- Leaderboards: `v_service_leaderboard` / `v_class_leaderboard`, filtered to services the caller belongs to.
+- Storage paths: `avatars/<user_id>/…`, `service-media/<service_id>/…`. Both buckets are private, so use signed URLs.
 
 ## Project layout
 
