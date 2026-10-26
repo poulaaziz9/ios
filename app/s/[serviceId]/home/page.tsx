@@ -1,4 +1,3 @@
-import { ChevronLeft, Gift } from "lucide-react";
 import Link from "next/link";
 
 import { Avatar } from "@/components/avatar";
@@ -47,15 +46,6 @@ export default async function ServedHomePage({ params }: PageProps<"/s/[serviceI
           ))}
         </div>
       </section>
-
-      <Link
-        href={`/s/${serviceId}/home/gifts`}
-        className="flex items-center gap-3 rounded-xl border bg-card p-4 font-semibold shadow-sm hover:bg-accent"
-      >
-        <Gift className="size-6 text-primary" />
-        <span className="flex-1">{t.gifts}</span>
-        <ChevronLeft className="size-5 text-muted-foreground" />
-      </Link>
 
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">{t.timeline}</h2>

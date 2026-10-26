@@ -4,7 +4,14 @@ import { strings } from "@/lib/strings";
 
 export type NavIcon = "home" | "users" | "meetings" | "attendance" | "calendar" | "trophy" | "award" | "gift";
 
-export type NavSection = { href: string; label: string; icon?: NavIcon; exact?: boolean };
+export type NavSection = {
+  href: string;
+  label: string;
+  icon?: NavIcon;
+  exact?: boolean;
+  /** A count shown as a notification badge (e.g. pending gift requests). */
+  badge?: number;
+};
 
 export type AreaKind = "admin" | "church" | "manage" | "servant" | "home";
 
@@ -34,6 +41,7 @@ export function areaSections(kind: AreaKind, id?: string): NavSection[] {
         { href: `${base}/prep`, label: t.prep },
         { href: `${base}/competitions`, label: t.competitions },
         { href: `${base}/posts`, label: t.posts },
+        { href: `${base}/requests`, label: t.requests },
         { href: `${base}/gifts`, label: t.gifts },
         { href: `${base}/achievements`, label: t.achievements },
       ];
@@ -57,14 +65,15 @@ export function areaSections(kind: AreaKind, id?: string): NavSection[] {
         { href: base, label: t.home, icon: "home", exact: true },
         { href: `${base}/meetings`, label: t.meetings, icon: "meetings" },
         { href: `${base}/competitions`, label: t.competitions, icon: "trophy" },
+        { href: `${base}/gifts`, label: t.gifts, icon: "gift" },
         { href: `${base}/progress`, label: t.progress, icon: "award" },
       ];
     }
   }
 }
 
-/** Extra places that are not in the bottom tab bar but belong in the sidebar. */
-export function extraSections(kind: AreaKind, id?: string): NavSection[] {
-  if (kind === "home") return [{ href: `/s/${id}/home/gifts`, label: strings.manage.tabs.gifts, icon: "gift" }];
-  return [];
+/** Pending gift requests of a service admin area, shown as a badge. */
+export function withRequestsBadge(sections: NavSection[], serviceId: string, count: number): NavSection[] {
+  const href = `/s/${serviceId}/manage/requests`;
+  return sections.map((s) => (s.href === href && count > 0 ? { ...s, badge: count } : s));
 }

@@ -1,6 +1,5 @@
 /* eslint-disable @next/next/no-img-element -- short-lived signed URLs */
-import { ChevronRight, Gift } from "lucide-react";
-import Link from "next/link";
+import { Gift } from "lucide-react";
 
 import { ActionButton } from "@/components/action-button";
 import { Badge } from "@/components/ui/badge";
@@ -37,13 +36,6 @@ export default async function ServedGiftsPage({ params }: PageProps<"/s/[service
 
   return (
     <>
-      <Link
-        href={`/s/${serviceId}/home`}
-        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
-      >
-        <ChevronRight className="size-4" />
-        {strings.served.tabs.home}
-      </Link>
       <div className="rounded-xl bg-primary p-4 text-center text-lg font-semibold text-primary-foreground">
         {t.available(points)}
       </div>

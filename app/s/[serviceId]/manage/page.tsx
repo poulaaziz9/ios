@@ -1,7 +1,10 @@
+import { Gift } from "lucide-react";
 import Link from "next/link";
 
+import { CountBadge } from "@/components/count-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatRelative } from "@/lib/format";
+import { pendingGiftRequests } from "@/lib/gift-requests";
 import { strings } from "@/lib/strings";
 import { createClient } from "@/lib/supabase/server";
 
@@ -21,7 +24,7 @@ export default async function ManageDashboardPage({
       .eq("role", role)
       .eq("status", status);
 
-  const [classes, servants, served, pending, top, visits] = await Promise.all([
+  const [classes, servants, served, pending, top, visits, giftRequests] = await Promise.all([
     supabase.from("classes").select("id", { count: "exact", head: true }).eq("service_id", serviceId),
     members("servant", "active"),
     members("served", "active"),
@@ -41,6 +44,7 @@ export default async function ManageDashboardPage({
       .eq("service_id", serviceId)
       .order("visited_at", { ascending: false })
       .limit(5),
+    pendingGiftRequests(serviceId),
   ]);
 
   const stats = [
@@ -52,6 +56,16 @@ export default async function ManageDashboardPage({
 
   return (
     <>
+      {giftRequests > 0 && (
+        <Link
+          href={`/s/${serviceId}/manage/requests`}
+          className="flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 font-medium hover:bg-destructive/10"
+        >
+          <Gift className="size-6 text-destructive" />
+          <span className="flex-1">{t.giftRequestsWaiting(giftRequests)}</span>
+          <CountBadge count={giftRequests} />
+        </Link>
+      )}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {stats.map((s) => (
           <Link

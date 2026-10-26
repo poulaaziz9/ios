@@ -145,6 +145,7 @@ export const strings = {
       prep: "التحضير",
       competitions: "المسابقات",
       posts: "البوستات",
+      requests: "طلبات الهدايا",
       gifts: "الهدايا",
       achievements: "الإنجازات",
     },
@@ -175,6 +176,8 @@ export const strings = {
     servants: "الخدام",
     served: "المخدومين",
     pendingMembers: "مستنيين موافقة",
+    giftRequestsWaiting: (n: number) =>
+      n === 1 ? "فيه طلب هدية مستني ردك" : `فيه ${n.toLocaleString("ar-EG")} طلبات هدايا مستنية ردك`,
     removedMembers: "اتشالوا من الخدمة",
     allClasses: "كل الفصول",
     noClass: "من غير فصل",
@@ -375,7 +378,13 @@ export const strings = {
     back: "الجلسات",
   },
   served: {
-    tabs: { home: "الرئيسية", meetings: "الاجتماعات", competitions: "المسابقات", progress: "الإنجازات والترتيب" },
+    tabs: {
+      home: "الرئيسية",
+      meetings: "الاجتماعات",
+      competitions: "المسابقات",
+      gifts: "الهدايا",
+      progress: "الإنجازات والترتيب",
+    },
     myPoints: "نقاطي",
     inService: "في الخدمة",
     inClass: "في الفصل",
@@ -383,7 +392,6 @@ export const strings = {
     timeline: "آخر الأخبار",
     noPosts: "لسه مفيش بوستات.",
     editProfile: "صورتي واسمي",
-    gifts: "استبدل نقطك بهدايا",
   },
   competitions: {
     open: "مسابقات متاحة",

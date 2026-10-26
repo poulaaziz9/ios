@@ -38,7 +38,7 @@ test.describe.serial("served kid ↔ service admin", () => {
   test("kid requests a gift, which reserves points", async ({ page }) => {
     page.on("dialog", (d) => d.accept());
     await login(page, KID);
-    await page.getByRole("link", { name: "استبدل نقطك بهدايا" }).click();
+    await page.getByRole("link", { name: "الهدايا" }).click();
     const before = await page.getByText(/معاك .* نقطة متاحة/).innerText();
     await page.locator("li", { hasText: "أيقونة صغيرة" }).getByRole("button", { name: "اطلبها" }).click();
     await expect(page.getByText("مستني الموافقة")).toBeVisible();
@@ -47,10 +47,13 @@ test.describe.serial("served kid ↔ service admin", () => {
 
   test("admin approves; the ledger is debited and the kid sees it", async ({ page }) => {
     await login(page, ADMIN);
-    await page.getByRole("link", { name: "الهدايا" }).click();
+    // The pending request shows up as a notification on the dashboard and the tab.
+    await expect(page.getByText("فيه طلب هدية مستني ردك")).toBeVisible();
+    await page.getByRole("link", { name: "طلبات الهدايا ١" }).click();
     const request = page.locator("li", { hasText: "أبانوب هاني" });
     await request.getByRole("button", { name: "وافق" }).click();
     await expect(request.getByText("اتوافق عليه")).toBeVisible();
+    await expect(page.getByRole("link", { name: "طلبات الهدايا", exact: true })).toBeVisible();
 
     await page.getByRole("link", { name: "النقاط" }).click();
     await expect(page.locator("li", { hasText: "أبانوب هاني" }).first()).toContainText("-60");

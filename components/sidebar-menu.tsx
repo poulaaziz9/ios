@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 
 import { AppLogo } from "@/components/app-logo";
 import { Avatar } from "@/components/avatar";
+import { CountBadge } from "@/components/count-badge";
 import { Button } from "@/components/ui/button";
 import type { NavSection } from "@/lib/nav";
 import { strings } from "@/lib/strings";
@@ -69,10 +70,21 @@ export function SidebarMenu({
     };
   }, [open]);
 
+  const badgeSum = (sections: NavSection[]) => sections.reduce((n, s) => n + (s.badge ?? 0), 0);
+  const totalBadge = groups.reduce((n, g) => n + badgeSum(g.sections), 0);
+
   return (
     <>
-      <Button variant="ghost" size="icon" aria-label={t.open} aria-expanded={open} onClick={() => setOpen(true)}>
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label={t.open}
+        aria-expanded={open}
+        onClick={() => setOpen(true)}
+        className="relative"
+      >
         <Menu className="size-6" />
+        {totalBadge > 0 && <CountBadge count={totalBadge} className="absolute -end-1 -top-1" />}
       </Button>
 
       <div
@@ -165,7 +177,12 @@ export function SidebarMenu({
                     <span className="block font-medium">{g.title}</span>
                     <span className="block text-xs text-muted-foreground">{g.subtitle}</span>
                   </span>
-                  <ChevronDown className="size-4 shrink-0 transition-transform group-open:rotate-180" />
+                  <span className="flex shrink-0 items-center gap-2">
+                    {badgeSum(g.sections) > 0 && (
+                      <CountBadge count={badgeSum(g.sections)} className="group-open:hidden" />
+                    )}
+                    <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
+                  </span>
                 </summary>
                 <ul className="ms-3 mt-1 flex flex-col gap-0.5 border-s ps-2">
                   {g.sections.map((s) => (
@@ -174,11 +191,12 @@ export function SidebarMenu({
                         href={s.href}
                         aria-current={isActive(pathname, s) ? "page" : undefined}
                         className={cn(
-                          "block rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground",
+                          "flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-foreground",
                           isActive(pathname, s) && "bg-primary/10 font-semibold text-primary",
                         )}
                       >
                         {s.label}
+                        {!!s.badge && <CountBadge count={s.badge} />}
                       </Link>
                     </li>
                   ))}

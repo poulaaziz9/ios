@@ -2,17 +2,26 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
 
+import { CountBadge } from "@/components/count-badge";
 import { cn } from "@/lib/utils";
 
 export function NavTabs({
   tabs,
 }: {
-  tabs: { href: string; label: string; exact?: boolean }[];
+  tabs: { href: string; label: string; exact?: boolean; badge?: number }[];
 }) {
   const pathname = usePathname();
+  const nav = useRef<HTMLElement>(null);
+
+  // Long strips scroll sideways; keep the open tab in view.
+  useEffect(() => {
+    nav.current?.querySelector('[aria-current="page"]')?.scrollIntoView({ block: "nearest", inline: "center" });
+  }, [pathname]);
+
   return (
-    <nav className="-mx-4 flex gap-1 overflow-x-auto px-4 [scrollbar-width:none]">
+    <nav ref={nav} className="-mx-4 flex gap-1 overflow-x-auto px-4 [scrollbar-width:none]">
       <div className="flex min-w-full gap-1 rounded-lg bg-muted p-1">
       {tabs.map((tab) => {
         const active = tab.exact
@@ -29,6 +38,7 @@ export function NavTabs({
             )}
           >
             {tab.label}
+            {!!tab.badge && <CountBadge count={tab.badge} className="ms-1.5" />}
           </Link>
         );
       })}
