@@ -229,14 +229,14 @@ isOneToOne: false
                   ]
                 },"join_codes": {
                   Row: {
-                    "class_id": string | null,"code": string,"created_at": string,"created_by": string | null,"expires_at": string | null,"id": string,"is_active": boolean,"service_id": string
+                    "class_id": string,"code": string,"created_at": string,"created_by": string | null,"expires_at": string | null,"id": string,"is_active": boolean,"service_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "class_id"?: string | null,"code": string,"created_at"?: string,"created_by"?: string | null,"expires_at"?: string | null,"id"?: string,"is_active"?: boolean,"service_id": string
+                    "class_id": string,"code"?: string,"created_at"?: string,"created_by"?: string | null,"expires_at"?: string | null,"id"?: string,"is_active"?: boolean,"service_id": string
                   }
                   Update: {
-                    "class_id"?: string | null,"code"?: string,"created_at"?: string,"created_by"?: string | null,"expires_at"?: string | null,"id"?: string,"is_active"?: boolean,"service_id"?: string
+                    "class_id"?: string,"code"?: string,"created_at"?: string,"created_by"?: string | null,"expires_at"?: string | null,"id"?: string,"is_active"?: boolean,"service_id"?: string
                   }
                   Relationships: [
                     {
@@ -606,6 +606,9 @@ isOneToOne: false
             "achievement_service_id":
 { Args: { "p_achievement": string }; Returns: string
                            },
+"cairo_end_of_day":
+{ Args: { "p_date": string }; Returns: string
+                           },
 "can_see_church":
 { Args: { "p_church": string }; Returns: boolean
                            },
@@ -636,10 +639,30 @@ isOneToOne: false
 "competition_service_id":
 { Args: { "p_competition": string }; Returns: string
                            },
+"create_join_code":
+{ Args: { "p_class": string,"p_expires_on"?: string }; Returns: {
+              "class_id": string,
+"code": string,
+"created_at": string,
+"created_by": string | null,
+"expires_at": string | null,
+"id": string,
+"is_active": boolean,
+"service_id": string
+            }
+                          SetofOptions: {
+        from: "*"
+        to: "join_codes"
+        isOneToOne: true
+        isSetofReturn: false
+      } },
 "find_user_by_phone":
 { Args: { "p_phone": string }; Returns: {
               "full_name": string,"id": string
             }[]
+                           },
+"generate_join_code":
+{ Args: Record<PropertyKey, never>; Returns: string
                            },
 "gift_service_id":
 { Args: { "p_gift": string }; Returns: string
@@ -665,8 +688,22 @@ isOneToOne: false
 "is_super_admin":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
+"join_code_preview":
+{ Args: { "p_code": string }; Returns: {
+              "already_member": boolean,"church_name": string,"class_name": string,"service_id": string,"service_name": string
+            }[]
+                           },
+"join_with_code":
+{ Args: { "p_code": string }; Returns: string
+                           },
+"normalize_join_code":
+{ Args: { "p_code": string }; Returns: string
+                           },
 "prep_session_service_id":
 { Args: { "p_session": string }; Returns: string
+                           },
+"regenerate_join_code":
+{ Args: { "p_code_id": string }; Returns: string
                            },
 "remove_church_servant":
 { Args: { "p_church": string,"p_user": string }; Returns: undefined
@@ -678,6 +715,14 @@ isOneToOne: false
                            },
 "service_church_id":
 { Args: { "p_service": string }; Returns: string
+                           },
+"service_roster":
+{ Args: { "p_service": string }; Returns: {
+              "avatar_url": string,"class_id": string,"full_name": string,"joined_at": string,"member_id": string,"phone": string,"role": Database["public"]['Enums']["member_role"],"status": Database["public"]['Enums']["member_status"],"user_id": string
+            }[]
+                           },
+"set_join_code_expiry":
+{ Args: { "p_code_id": string,"p_expires_on": string }; Returns: undefined
                            },
 "set_servant_services":
 { Args: { "p_church": string,"p_services": (string)[],"p_user": string }; Returns: undefined

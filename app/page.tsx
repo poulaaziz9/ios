@@ -1,8 +1,10 @@
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, QrCode } from "lucide-react";
+import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { requireUserId } from "@/lib/auth/session";
 import { getDestinations, LAST_DESTINATION_COOKIE } from "@/lib/destinations";
@@ -66,6 +68,12 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
           ))}
         </ul>
       )}
+      <Button asChild variant={destinations.length ? "outline" : "default"} size="lg">
+        <Link href="/join">
+          <QrCode />
+          {strings.home.joinService}
+        </Link>
+      </Button>
     </main>
   );
 }

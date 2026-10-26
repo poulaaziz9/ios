@@ -9,6 +9,6 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     // Skip Next internals, the service worker route, and static files.
-    "/((?!_next/static|_next/image|serwist/|manifest.webmanifest|favicon.ico|icons/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|js|txt)$).*)",
+    "/((?!_next/static|_next/image|serwist/|manifest.webmanifest|favicon.ico|icons/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|js|txt|wasm)$).*)",
   ],
 };

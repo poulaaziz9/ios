@@ -4,9 +4,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/lib/database.types";
 import { SUPABASE_PUBLISHABLE_KEY, SUPABASE_URL } from "./env";
 
-// Routes reachable without a session. `/join` handles the logged-out case
-// itself (signup → back to join), so it is public too.
-const PUBLIC_PATHS = ["/login", "/signup", "/join", "/~offline"];
+// Routes reachable without a session. `/join` and `/scan` handle the
+// logged-out case themselves (signup → back to join), so they are public too.
+const PUBLIC_PATHS = ["/login", "/signup", "/join", "/scan", "/~offline"];
 
 function isPublic(pathname: string) {
   return PUBLIC_PATHS.some(

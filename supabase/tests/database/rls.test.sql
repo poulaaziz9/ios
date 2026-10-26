@@ -539,6 +539,73 @@ select throws_ok($$ select * from public.find_user_by_phone('+201090000001') $$,
 reset role;
 
 -- ===========================================================================
+-- Phase 4: join codes, joining, roster
+-- ===========================================================================
+select throws_ok(
+  format($$ insert into public.join_codes (service_id, class_id) values (%L, null) $$, tests.uid('svc_a1')),
+  '23502', null, 'join_codes: every code belongs to a class');
+
+select tests.as_user('admin_a1');
+select matches((select code from public.create_join_code(tests.uid('class_a1y'))), '^[A-Z2-9]{6}$', 'create_join_code: generates a 6-char code');
+select ok(
+  (select expires_at > now() from public.create_join_code(tests.uid('class_a1y'), current_date)),
+  'create_join_code: expiry is end of the chosen day');
+select throws_ok(format('select public.create_join_code(%L)', tests.uid('class_a2x')), '42501', null,
+  'create_join_code: not for other services');
+select isnt(
+  public.regenerate_join_code((select id from public.join_codes where code = 'TESTA1X')),
+  'TESTA1X', 'regenerate_join_code: issues a new code');
+reset role;
+-- Put the fixture code back for the join tests below.
+update public.join_codes set code = 'TESTA1X' where service_id = tests.uid('svc_a1') and class_id = tests.uid('class_a1x');
+
+select tests.as_user('kid_y');
+select throws_ok(
+  format('select public.regenerate_join_code(%L)', (select id from public.join_codes where code = 'TESTA1X')),
+  '42501', null, 'regenerate_join_code: not for members');
+select throws_ok(format('select * from public.service_roster(%L)', tests.uid('svc_a1')), '42501', null,
+  'service_roster: admins only');
+reset role;
+select tests.as_user('admin_a1');
+select ok(
+  (select phone is not null from public.service_roster(tests.uid('svc_a1')) where user_id = tests.uid('kid_y')),
+  'service_roster: admin gets phones');
+reset role;
+
+select tests.create_user('newkid', '+201090000099');
+select tests.as_user('newkid');
+select is((select class_name from public.join_code_preview(' testa1x ')), 'a1x', 'join_code_preview: case/space-insensitive');
+select is((select count(*)::int from public.join_code_preview('NOPE99')), 0, 'join_code_preview: unknown code → no row');
+select is(public.join_with_code('testa1x'), tests.uid('svc_a1'), 'join_with_code: returns the service');
+select is(
+  (select row(class_id, status)::text from public.service_members where user_id = tests.uid('newkid')),
+  row(tests.uid('class_a1x'), 'active'::public.member_status)::text,
+  'join_with_code: joins the code''s class as active');
+select lives_ok($$ select public.join_with_code('TESTA1X') $$, 'join_with_code: joining twice is harmless');
+select is((select count(*)::int from public.service_members where user_id = tests.uid('newkid')), 1, 'join_with_code: no duplicate membership');
+select ok((select already_member from public.join_code_preview('TESTA1X')), 'join_code_preview: knows you already joined');
+select throws_ok($$ select public.join_with_code('NOPE99') $$, 'P0001', 'invalid_code', 'join_with_code: unknown code');
+reset role;
+update public.join_codes set is_active = false where code = 'TESTB1X';
+update public.join_codes set expires_at = now() - interval '1 minute' where code = 'TESTA1X';
+select tests.as_user('newkid');
+select throws_ok($$ select public.join_with_code('TESTB1X') $$, 'P0001', 'invalid_code', 'join_with_code: inactive code');
+reset role;
+select tests.as_user('outsider');
+select throws_ok($$ select public.join_with_code('TESTA1X') $$, 'P0001', 'invalid_code', 'join_with_code: expired code');
+reset role;
+update public.join_codes set expires_at = null where code = 'TESTA1X';
+select tests.as_user('kid_x'); -- removed earlier in the phase 3 section
+select throws_ok($$ select public.join_with_code('TESTA1X') $$, 'P0001', 'removed', 'join_with_code: removed kid cannot rejoin alone');
+reset role;
+select tests.as_user('servant_x');
+select throws_ok($$ select public.join_with_code('TESTA1X') $$, 'P0001', 'staff', 'join_with_code: servants do not join as served');
+reset role;
+set local role anon;
+select throws_ok($$ select public.join_with_code('TESTA1X') $$, '42501', null, 'join_with_code: anon cannot join');
+reset role;
+
+-- ===========================================================================
 -- Cascade: super admin deletes a church with everything under it
 -- ===========================================================================
 select tests.as_user('super');

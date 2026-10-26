@@ -22,6 +22,7 @@ Useful scripts:
 | `npm run db:reset` | Recreate the local DB from `supabase/migrations` (+ seed) |
 | `npm run db:types` | Regenerate `lib/database.types.ts` from the local DB |
 | `npm run test:db` | RLS test suite (pgTAP, `supabase/tests/database`) |
+| `npm run test:e2e` | Playwright smoke test of the join-by-QR flow (needs `db reset` + `build`; starts `npm start` if nothing is on :3000) |
 | `npm run typecheck` / `npm run lint` | TypeScript / ESLint |
 | `npm run icons` | Regenerate PWA icons in `public/icons` |
 
@@ -45,7 +46,7 @@ Login accepts either a phone (mapped the same way) or a real email (for admin ac
 | Servants | 01100000001, 01100000002 |
 | Served ×6 | 01200000001 … 01200000006 |
 
-Join codes: `EADY1A` (أولى إعدادي), `EADY2B` (تانية إعدادي), `EADYALL` (service-level, joins as pending).
+Join codes (one per class): `EADY1A` (أولى إعدادي), `EADY2B` (تانية إعدادي). Try `/join?code=EADY1A`.
 
 ## Data access model
 
@@ -63,7 +64,9 @@ Every table has RLS with default deny; see `supabase/migrations/*_rls_*.sql`. Th
 | `/` | everyone | "اختار الخدمة" picker; skips straight to the only/last-picked place (`?pick=1` to choose again) |
 | `/admin` | super admin | churches CRUD; appoint/remove church admins (search users by name or phone) |
 | `/church/[churchId]` | church admin | services CRUD, service admins, servants pool |
-| `/s/[serviceId]/manage·servant·home` | per role | placeholders until phases 4–7 |
+| `/s/[serviceId]/manage` | service admin | dashboard, classes, members (move/approve/remove), join codes + QR + printable poster |
+| `/join?code=…`, `/scan` | anyone | join a class by QR or typed code (logged out → signup → back to join) |
+| `/s/[serviceId]/servant·home` | servant / served | placeholders until phases 6–7 |
 
 Church admins find people by **exact phone number only** (`find_user_by_phone`), so they can't browse the platform's users. Only super admins get a name/phone search (`search_users`).
 
@@ -80,6 +83,12 @@ lib/strings.ts       all Arabic UI strings
 proxy.ts             session refresh + optimistic auth redirect (Next 16's name for middleware.ts)
 supabase/migrations/ SQL migrations
 ```
+
+## Join codes
+
+One code per class (owner decision, phase 4): scanning puts the kid straight into that class as an active member. Codes are 6 characters without look-alikes (no 0/O, 1/I/L), can expire at the end of a chosen day (Cairo time), can be paused, and can be regenerated (the old QR stops working). Scanning a code for a service you're already in does nothing; only the service admin moves kids between classes. A kid the admin removed can't rejoin on their own.
+
+The QR encodes `NEXT_PUBLIC_SITE_URL/join?code=…` (falls back to the request host), so set `NEXT_PUBLIC_SITE_URL` in production. The scanner's fallback decoder for iOS (`zxing_reader.wasm`) is copied into `public/zxing` on `postinstall` and served from our own origin.
 
 ## Notes
 
