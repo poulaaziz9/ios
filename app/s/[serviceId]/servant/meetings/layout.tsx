@@ -14,7 +14,6 @@ export default async function ServantMeetingsLayout({
         tabs={[
           { href: base, label: t.schedule, exact: true },
           { href: `${base}/mine`, label: t.mine },
-          { href: `${base}/attendance`, label: t.attendance },
         ]}
       />
       {children}

@@ -33,7 +33,8 @@ export default async function ServantLayout({
         items={[
           { href: base, label: t.home, icon: "home", exact: true },
           { href: `${base}/served`, label: t.served, icon: "users" },
-          { href: `${base}/meetings`, label: t.meetings, icon: "attendance" },
+          { href: `${base}/meetings`, label: t.meetings, icon: "meetings" },
+          { href: `${base}/attendance`, label: t.attendance, icon: "attendance" },
           { href: `${base}/prep`, label: t.prep, icon: "calendar" },
           { href: `${base}/board`, label: t.board, icon: "trophy" },
         ]}

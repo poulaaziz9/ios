@@ -76,7 +76,6 @@ test("servant logs a visit and earns the visit points", async ({ page }) => {
 test("any servant records meeting attendance for kids of the whole service", async ({ page }) => {
   // خادمة مريم serves تانية إعدادي, yet can mark a kid from أولى إعدادي.
   await login(page, "01100000002");
-  await page.getByRole("link", { name: "الاجتماعات" }).click();
   await page.getByRole("link", { name: "الحضور" }).click();
   await expect(page.getByRole("heading", { name: "حضور الاجتماع" })).toBeVisible();
 

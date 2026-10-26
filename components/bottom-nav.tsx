@@ -1,6 +1,6 @@
 "use client";
 
-import { Award, CalendarCheck, ClipboardCheck, Home, Trophy, Users, type LucideIcon } from "lucide-react";
+import { Award, CalendarCheck, CalendarDays, ClipboardCheck, Home, Trophy, Users, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -10,6 +10,7 @@ const ICONS = {
   home: Home,
   users: Users,
   calendar: CalendarCheck,
+  meetings: CalendarDays,
   attendance: ClipboardCheck,
   trophy: Trophy,
   award: Award,
@@ -39,7 +40,7 @@ export function BottomNav({ items }: { items: BottomNavItem[] }) {
                 href={item.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "flex flex-col items-center gap-1 py-2 text-xs text-muted-foreground",
+                  "flex flex-col items-center gap-1 py-2 text-[11px] whitespace-nowrap text-muted-foreground sm:text-xs",
                   active && "font-semibold text-primary",
                 )}
               >

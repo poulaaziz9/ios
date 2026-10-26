@@ -29,7 +29,7 @@ export default async function ServedLayout({ children, params }: LayoutProps<"/s
       <BottomNav
         items={[
           { href: base, label: t.home, icon: "home", exact: true },
-          { href: `${base}/meetings`, label: t.meetings, icon: "calendar" },
+          { href: `${base}/meetings`, label: t.meetings, icon: "meetings" },
           { href: `${base}/competitions`, label: t.competitions, icon: "trophy" },
           { href: `${base}/progress`, label: t.progress, icon: "award" },
         ]}

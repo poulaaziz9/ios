@@ -257,7 +257,14 @@ export const strings = {
     },
   },
   servant: {
-    tabs: { home: "الرئيسية", served: "مخدوميني", meetings: "الاجتماعات", prep: "التحضير", board: "الترتيب" },
+    tabs: {
+      home: "الرئيسية",
+      served: "مخدوميني",
+      meetings: "الاجتماعات",
+      attendance: "الحضور",
+      prep: "التحضير",
+      board: "الترتيب",
+    },
     myPoints: "نقاطي",
     rankAmongServants: (rank: number, total: number) =>
       `ترتيبك ${rank.toLocaleString("ar-EG")} من ${total.toLocaleString("ar-EG")} خادم`,
@@ -287,7 +294,7 @@ export const strings = {
     upcoming: "جاية",
   },
   meetings: {
-    tabs: { schedule: "الجدول", mine: "دروسي", attendance: "الحضور" },
+    tabs: { schedule: "الجدول", mine: "دروسي" },
     upcoming: "الاجتماعات الجاية",
     past: "اجتماعات فاتت",
     none: "لسه مفيش اجتماعات متحددة.",
