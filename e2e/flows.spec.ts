@@ -123,6 +123,7 @@ test("sidebar lists the user's areas and sections; logout lives in the profile",
   await page.getByRole("button", { name: "افتح القائمة" }).click();
   const menu = page.getByRole("dialog");
   await expect(menu.getByRole("link", { name: "الحضور" })).toBeVisible();
+  await expect(menu.getByRole("link", { name: /حسابي.*نقطة/ })).toBeVisible(); // the servant's points
   await menu.getByRole("link", { name: "الترتيب" }).click();
   await expect(page).toHaveURL(/\/servant\/board$/);
   await expect(menu).toBeHidden();

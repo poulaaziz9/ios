@@ -451,6 +451,7 @@ export const strings = {
     open: "افتح القائمة",
     close: "اقفل القائمة",
     myAccount: "حسابي",
+    points: "نقطة",
     pending: "مستني الموافقة",
   },
   profile: {

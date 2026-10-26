@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronDown, Menu, UserRound, X } from "lucide-react";
+import { ChevronDown, Menu, Star, UserRound, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -30,12 +30,24 @@ export function SidebarMenu({
   name,
   avatarUrl,
   groups,
+  points,
 }: {
   name: string;
   avatarUrl?: string | null;
   groups: SidebarGroup[];
+  /** The user's total points per service id. */
+  points: Record<string, number>;
 }) {
   const pathname = usePathname();
+  // Points of the service being viewed, or of the only service the user has.
+  const currentService = /^\/s\/([^/]+)/.exec(pathname)?.[1];
+  const serviceIds = Object.keys(points);
+  const shownPoints =
+    currentService && currentService in points
+      ? points[currentService]
+      : serviceIds.length === 1
+        ? points[serviceIds[0]]
+        : null;
   const [open, setOpen] = useState(false);
   const [lastPath, setLastPath] = useState(pathname);
 
@@ -101,13 +113,22 @@ export function SidebarMenu({
             )}
           >
             <Avatar url={avatarUrl} name={name || "؟"} className="size-10" />
-            <span className="flex min-w-0 flex-col">
+            <span className="flex min-w-0 flex-1 flex-col">
               <span className="truncate font-semibold">{name}</span>
               <span className="flex items-center gap-1 text-xs text-muted-foreground">
                 <UserRound className="size-3.5" />
                 {t.myAccount}
               </span>
             </span>
+            {shownPoints !== null && (
+              <span className="flex shrink-0 flex-col items-center rounded-lg bg-primary/10 px-2.5 py-1 text-primary">
+                <span className="flex items-center gap-1 text-lg leading-none font-bold">
+                  <Star className="size-4 fill-current" />
+                  {shownPoints.toLocaleString("ar-EG")}
+                </span>
+                <span className="text-[11px]">{t.points}</span>
+              </span>
+            )}
           </Link>
 
           {groups.map((g) => {
