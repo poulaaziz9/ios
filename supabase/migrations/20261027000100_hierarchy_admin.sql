@@ -174,7 +174,7 @@ end;
 $$;
 
 -- ---------------------------------------------------------------------------
--- Visitation assignments only make sense between active members: drop them
+-- Visitation assignments only make sense between active members: remove them
 -- when either side leaves or is deactivated.
 -- ---------------------------------------------------------------------------
 create function public.drop_assignments_on_membership_end()

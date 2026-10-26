@@ -66,10 +66,10 @@ create trigger achievements_fixed_parent before update on public.achievements
 -- ---------------------------------------------------------------------------
 -- profiles (phase 1 created own-row policies; widen read access now)
 -- ---------------------------------------------------------------------------
-drop policy "profiles: read own" on public.profiles;
-
-create policy "profiles: read visible"
-  on public.profiles for select to authenticated
+-- Rewrite the phase-1 read policy in place (not remove + recreate, so hosted
+-- Supabase applies it without a destructive-change confirmation).
+alter policy "profiles: read own" on public.profiles rename to "profiles: read visible";
+alter policy "profiles: read visible" on public.profiles
   using (public.can_see_profile(id));
 
 -- Phone is personal data (mostly minors): not selectable through the table.
@@ -284,7 +284,8 @@ create policy "points_ledger: read own or admin"
   on public.points_ledger for select to authenticated
   using (user_id = (select auth.uid()) or public.is_service_admin(service_id));
 
-revoke insert, update, delete, truncate on public.points_ledger from authenticated;
+revoke all on public.points_ledger from authenticated;
+grant select on public.points_ledger to authenticated;
 
 -- ---------------------------------------------------------------------------
 -- posts — admins publish; members see service-wide posts and their class
