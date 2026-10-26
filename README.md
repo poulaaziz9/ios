@@ -2,6 +2,10 @@
 
 Multi-church PWA for managing church youth services. The full product and technical spec is in [`CLAUDE.md`](./CLAUDE.md); deployment steps are in [`DEPLOY.md`](./DEPLOY.md).
 
+![المخدوم](docs/screenshots/1-kids.png)
+
+More: [service admin](docs/screenshots/2-admin.png) · [servant, church admin, super admin](docs/screenshots/3-servant-church.png)
+
 ## Stack
 
 Next.js 16 (App Router, TypeScript strict) · Tailwind CSS v4 + shadcn/ui (RTL) · Supabase (Auth, Postgres + RLS) · Serwist PWA.
