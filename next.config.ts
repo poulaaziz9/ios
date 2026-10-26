@@ -12,6 +12,11 @@ const nextConfig: NextConfig = {
       },
     },
   },
+  experimental: {
+    // Photos are resized in the browser first (components/image-input.tsx);
+    // this leaves headroom for the multipart overhead.
+    serverActions: { bodySizeLimit: "3mb" },
+  },
   images: {
     remotePatterns: [{ protocol: "https", hostname: "*.supabase.co" }],
   },

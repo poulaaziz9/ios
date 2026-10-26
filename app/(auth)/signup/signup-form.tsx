@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormError } from "@/components/form-error";
+import { ImageInput } from "@/components/image-input";
 import { strings } from "@/lib/strings";
 import { signup, type AuthFormState } from "../actions";
 
@@ -20,6 +21,7 @@ export function SignupForm({ next }: { next: string }) {
   return (
     <form action={action} className="flex flex-col gap-4">
       <input type="hidden" name="next" value={next} />
+      <ImageInput name="avatar" label={t.photoOptional} maxSize={512} round />
       <div className="flex flex-col gap-2">
         <Label htmlFor="full_name">{t.fullName}</Label>
         <Input

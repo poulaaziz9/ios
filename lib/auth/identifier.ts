@@ -56,3 +56,9 @@ export function resolveIdentifier(raw: string): ResolvedIdentifier | null {
   if (!phone) return null;
   return { kind: "phone", authEmail: phoneToAuthEmail(phone), phone };
 }
+
+/** Display an E.164 Egyptian number the way people write it: +201012345678 → 01012345678. */
+export function formatPhone(e164: string | null | undefined) {
+  if (!e164) return "";
+  return e164.startsWith("+20") ? `0${e164.slice(3)}` : e164;
+}

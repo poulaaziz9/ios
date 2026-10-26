@@ -1,11 +1,14 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { normalizePhone, phoneToAuthEmail, resolveIdentifier } from "@/lib/auth/identifier";
 import { safeNextPath } from "@/lib/auth/next-path";
+import { LAST_DESTINATION_COOKIE } from "@/lib/destinations";
 import { strings } from "@/lib/strings";
 import { createClient } from "@/lib/supabase/server";
+import { imageFromForm, uploadImage } from "@/lib/upload";
 
 export type AuthFormState = {
   error?: string;
@@ -70,11 +73,23 @@ export async function signup(
   // duplicate accounts behind an empty identities list.
   if (!data.session) return { error: t.alreadyRegistered, fields };
 
+  // Optional photo (already resized in the browser). A failed upload
+  // shouldn't block signup; it can be added later from the profile page.
+  const photo = imageFromForm(formData, "avatar");
+  if (photo && data.user) {
+    const uploaded = await uploadImage(supabase, "avatars", data.user.id, photo);
+    if (uploaded.path) {
+      await supabase.from("profiles").update({ avatar_url: uploaded.path }).eq("id", data.user.id);
+    }
+  }
+
   redirect(next);
 }
 
 export async function logout() {
   const supabase = await createClient();
   await supabase.auth.signOut();
+  // Shared phones: the next person must not land in this user's service.
+  (await cookies()).delete(LAST_DESTINATION_COOKIE);
   redirect("/login");
 }
