@@ -76,6 +76,7 @@ test("servant logs a visit and earns the visit points", async ({ page }) => {
 test("any servant records meeting attendance for kids of the whole service", async ({ page }) => {
   // خادمة مريم serves تانية إعدادي, yet can mark a kid from أولى إعدادي.
   await login(page, "01100000002");
+  await page.getByRole("link", { name: "الاجتماعات" }).click();
   await page.getByRole("link", { name: "الحضور" }).click();
   await expect(page.getByRole("heading", { name: "حضور الاجتماع" })).toBeVisible();
 
@@ -89,4 +90,31 @@ test("any servant records meeting attendance for kids of the whole service", asy
   await page.reload();
   await expect(page.getByRole("checkbox", { name: "كيرلس عادل" })).toBeChecked();
   await expect(page.getByRole("heading", { name: "الاجتماعات اللي فاتت" })).toBeVisible();
+});
+
+test("admin plans a meeting; the speaker sees it in their lessons and kids see it", async ({ browser }) => {
+  const topic = `درس تجربة ${Date.now()}`;
+
+  const admin = await browser.newPage();
+  await login(admin, "01000000003");
+  await admin.goto("/s/20000000-0000-4000-a000-000000000001/manage/meetings");
+  await admin.getByLabel("يوم الاجتماع").fill("2099-01-15");
+  await admin.getByLabel("الميعاد (اختياري)").fill("18:30");
+  await admin.getByLabel("الموضوع / الدرس").fill(topic);
+  await admin.getByLabel("الخادم المسؤول عن الكلمة").selectOption({ label: "خادم مينا" });
+  await admin.getByRole("button", { name: "أضف الاجتماع" }).click();
+  await expect(admin.getByText(topic)).toBeVisible();
+
+  const servant = await browser.newPage();
+  await login(servant, "01100000001");
+  await servant.getByRole("link", { name: "الاجتماعات" }).click();
+  await servant.getByRole("link", { name: "دروسي" }).click();
+  await expect(servant.getByText(topic)).toBeVisible();
+
+  const kid = await browser.newPage();
+  await login(kid, "01200000002");
+  await kid.getByRole("link", { name: "الاجتماعات" }).click();
+  const card = kid.locator("li", { hasText: topic });
+  await expect(card).toBeVisible();
+  await expect(card.getByText("خادم مينا")).toBeVisible();
 });

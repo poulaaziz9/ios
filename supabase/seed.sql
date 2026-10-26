@@ -175,3 +175,18 @@ insert into public.achievements (service_id, name, description, icon, criteria) 
 
 -- user_achievements are awarded by the achievements engine (phase 8 triggers)
 -- as soon as the definitions above are inserted.
+
+-- ---------------------------------------------------------------------------
+-- Meetings schedule
+-- ---------------------------------------------------------------------------
+insert into public.meetings (service_id, class_id, meeting_date, start_time, topic, details, speaker_id) values
+  ('20000000-0000-4000-a000-000000000001', null, (now() at time zone 'Africa/Cairo')::date - 7, '18:00',
+   'السامري الصالح', 'لوقا ١٠: ٢٥–٣٧', '00000000-0000-4000-b000-000000000002'),
+  ('20000000-0000-4000-a000-000000000001', null, (now() at time zone 'Africa/Cairo')::date + 2, '18:00',
+   'مثل الابن الضال', 'لوقا ١٥ — ترنيمة: يا أبويا', '00000000-0000-4000-b000-000000000001'),
+  ('20000000-0000-4000-a000-000000000001', '30000000-0000-4000-a000-000000000001', (now() at time zone 'Africa/Cairo')::date + 5, '17:00',
+   'رحلة فصل أولى', 'التجمع قدام الكنيسة', null),
+  ('20000000-0000-4000-a000-000000000001', null, (now() at time zone 'Africa/Cairo')::date + 9, '18:00',
+   'داود وجليات', null, '00000000-0000-4000-b000-000000000002'),
+  ('20000000-0000-4000-a000-000000000001', null, (now() at time zone 'Africa/Cairo')::date + 16, '18:00',
+   'القديس مارجرجس', 'سيرة الشهيد العظيم', '00000000-0000-4000-b000-000000000001');

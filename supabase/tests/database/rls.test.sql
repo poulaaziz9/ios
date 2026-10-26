@@ -954,6 +954,60 @@ select is(
 reset role;
 
 -- ===========================================================================
+-- Meetings schedule: admin plans, members read, speaker must be a servant
+-- ===========================================================================
+select tests.new_id('meet_all');
+select tests.new_id('meet_y');
+select tests.as_user('admin_a1');
+select lives_ok(
+  format($$ insert into public.meetings (id, service_id, meeting_date, start_time, topic, speaker_id)
+            values (%L, %L, public.cairo_today() + 3, '18:00', 'التوبة', %L) $$,
+    tests.uid('meet_all'), tests.uid('svc_a1'), tests.uid('att_servant_1')),
+  'meetings: admin schedules a meeting with a speaker');
+select lives_ok(
+  format($$ insert into public.meetings (id, service_id, class_id, meeting_date, topic)
+            values (%L, %L, %L, public.cairo_today() + 10, 'درس فصل') $$,
+    tests.uid('meet_y'), tests.uid('svc_a1'), tests.uid('class_a1y')),
+  'meetings: admin schedules a class meeting');
+select throws_ok(
+  format($$ insert into public.meetings (service_id, meeting_date, topic, speaker_id) values (%L, public.cairo_today(), 'x', %L) $$,
+    tests.uid('svc_a1'), tests.uid('att_kid_1')),
+  '42501', null, 'meetings: speaker must be a servant of the service');
+select throws_ok(
+  format($$ insert into public.meetings (service_id, class_id, meeting_date, topic) values (%L, %L, public.cairo_today(), 'x') $$,
+    tests.uid('svc_a1'), tests.uid('class_b1x')),
+  '42501', null, 'meetings: class must belong to the service');
+select throws_ok(
+  format($$ insert into public.meetings (service_id, meeting_date, topic) values (%L, public.cairo_today(), 'x') $$, tests.uid('svc_b1')),
+  '42501', null, 'meetings: admin cannot plan for another service');
+reset role;
+
+select tests.as_user('att_servant_2');
+select is((select count(*)::int from public.meetings where service_id = tests.uid('svc_a1')), 2, 'meetings: servants see every meeting');
+select throws_ok(
+  format($$ insert into public.meetings (service_id, meeting_date, topic) values (%L, public.cairo_today(), 'x') $$, tests.uid('svc_a1')),
+  '42501', null, 'meetings: servants cannot plan meetings');
+select is(tests.affected(format($$ update public.meetings set topic = 'x' where id = %L $$, tests.uid('meet_all'))), 0,
+  'meetings: servants cannot edit meetings');
+reset role;
+
+select tests.as_user('att_kid_1');
+select is(
+  (select array_agg(topic) from public.meetings where service_id = tests.uid('svc_a1')),
+  array['التوبة'], 'meetings: a kid sees service-wide meetings and not another class''s');
+select is(tests.affected(format($$ delete from public.meetings where id = %L $$, tests.uid('meet_all'))), 0,
+  'meetings: kids cannot delete meetings');
+reset role;
+
+select tests.as_user('outsider');
+select is((select count(*)::int from public.meetings), 0, 'meetings: outsiders see nothing');
+reset role;
+
+select tests.as_user('admin_a1');
+select is(tests.affected(format($$ delete from public.meetings where id = %L $$, tests.uid('meet_y'))), 1, 'meetings: admin deletes a meeting');
+reset role;
+
+-- ===========================================================================
 -- Cascade: super admin deletes a church with everything under it
 -- ===========================================================================
 select tests.as_user('super');

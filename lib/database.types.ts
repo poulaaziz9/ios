@@ -297,6 +297,44 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"meetings": {
+                  Row: {
+                    "class_id": string | null,"created_at": string,"created_by": string | null,"details": string | null,"id": string,"meeting_date": string,"service_id": string,"speaker_id": string | null,"start_time": string | null,"topic": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "class_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"details"?: string | null,"id"?: string,"meeting_date": string,"service_id": string,"speaker_id"?: string | null,"start_time"?: string | null,"topic": string
+                  }
+                  Update: {
+                    "class_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"details"?: string | null,"id"?: string,"meeting_date"?: string,"service_id"?: string,"speaker_id"?: string | null,"start_time"?: string | null,"topic"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "meetings_class_id_fkey"
+      columns: ["class_id"]
+isOneToOne: false
+      referencedRelation: "classes"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "meetings_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "meetings_service_id_fkey"
+      columns: ["service_id"]
+isOneToOne: false
+      referencedRelation: "services"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "meetings_speaker_id_fkey"
+      columns: ["speaker_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"point_rules": {
                   Row: {
                     "created_at": string,"points": number,"reason": Database["public"]['Enums']["point_reason"],"service_id": string
@@ -779,6 +817,9 @@ isOneToOne: false
 { Args: { "p_date": string,"p_service": string }; Returns: {
               "avatar_url": string,"class_id": string,"full_name": string,"present": boolean,"served_id": string
             }[]
+                           },
+"meeting_refs_ok":
+{ Args: { "p_class": string,"p_service": string,"p_speaker": string }; Returns: boolean
                            },
 "member_class_id":
 { Args: { "p_service": string,"p_user": string }; Returns: string

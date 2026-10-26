@@ -80,3 +80,21 @@ export function formatDateTime(value: string | Date) {
 export function isPast(value: string | null | undefined) {
   return !!value && new Date(value).getTime() <= Date.now();
 }
+
+const weekdayFmt = new Intl.DateTimeFormat("ar-EG", { timeZone: "Africa/Cairo", weekday: "long" });
+const dayFmt = new Intl.DateTimeFormat("ar-EG", { timeZone: "Africa/Cairo", day: "numeric" });
+const monthFmt = new Intl.DateTimeFormat("ar-EG", { timeZone: "Africa/Cairo", month: "short" });
+
+/** Parts of a yyyy-mm-dd day for a calendar-style badge: "الجمعة", "٣٠", "أكتوبر". */
+export function dayParts(day: string) {
+  const d = new Date(cairoNoon(day));
+  return { weekday: weekdayFmt.format(d), day: dayFmt.format(d), month: monthFmt.format(d) };
+}
+
+/** A wall-clock time ("18:30" or "18:30:00") as "٦:٣٠ م". */
+export function formatTime(time: string) {
+  const [h, m] = time.split(":").map(Number);
+  return new Intl.DateTimeFormat("ar-EG", { hour: "numeric", minute: "2-digit", timeZone: "UTC" }).format(
+    new Date(Date.UTC(2000, 0, 1, h, m)),
+  );
+}

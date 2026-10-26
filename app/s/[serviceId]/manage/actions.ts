@@ -500,3 +500,42 @@ export async function deleteAchievement(serviceId: string, achievementId: string
   await supabase.from("achievements").delete().eq("id", achievementId).eq("service_id", serviceId);
   revalidatePath(`/s/${serviceId}`, "layout");
 }
+
+// ---------------------------------------------------------------------------
+// Meetings schedule
+// ---------------------------------------------------------------------------
+export async function saveMeeting(
+  serviceId: string,
+  meetingId: string | null,
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const t = strings.meetings;
+  const topic = text(formData, "topic");
+  const date = text(formData, "meeting_date");
+  if (!topic) return { error: t.topicRequired };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return { error: t.dateRequired };
+  const row = {
+    meeting_date: date,
+    start_time: text(formData, "start_time") || null,
+    topic,
+    details: text(formData, "details") || null,
+    speaker_id: text(formData, "speaker_id") || null,
+    class_id: text(formData, "class_id") || null,
+  };
+  const supabase = await createClient();
+  const { error } = meetingId
+    ? await supabase.from("meetings").update(row).eq("id", meetingId).eq("service_id", serviceId)
+    : await supabase.from("meetings").insert({ ...row, service_id: serviceId });
+  revalidatePath(`/s/${serviceId}`, "layout");
+  if (error?.code === "42501") return { error: t.badSpeaker };
+  if (error || !meetingId) return fromError(error);
+  redirect(`${managePath(serviceId)}/meetings`);
+}
+
+export async function deleteMeeting(serviceId: string, meetingId: string) {
+  const supabase = await createClient();
+  await supabase.from("meetings").delete().eq("id", meetingId).eq("service_id", serviceId);
+  revalidatePath(`/s/${serviceId}`, "layout");
+  redirect(`${managePath(serviceId)}/meetings`);
+}
