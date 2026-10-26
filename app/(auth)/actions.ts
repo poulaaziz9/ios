@@ -67,7 +67,11 @@ export async function signup(
       error.code === "user_already_exists" ||
       error.code === "email_exists" ||
       /already|exists|duplicate/i.test(error.message);
-    return { error: taken ? t.alreadyRegistered : strings.common.genericError, fields };
+    if (taken) return { error: t.alreadyRegistered, fields };
+    // Keep the cause visible so a user can report it (no personal data in it).
+    console.error("signup failed", error.status, error.code, error.message);
+    const cause = [error.status, error.code ?? error.name].filter(Boolean).join(" ");
+    return { error: `${strings.common.genericError} (${cause})`, fields };
   }
   // With email confirmation on, Supabase returns no session and hides
   // duplicate accounts behind an empty identities list.
