@@ -1,9 +1,10 @@
 "use client";
 
-import { Award, CalendarCheck, CalendarDays, ClipboardCheck, Home, Trophy, Users, type LucideIcon } from "lucide-react";
+import { Award, CalendarCheck, CalendarDays, ClipboardCheck, Gift, Home, Trophy, Users, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import type { NavSection, NavIcon } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 
 const ICONS = {
@@ -14,23 +15,18 @@ const ICONS = {
   attendance: ClipboardCheck,
   trophy: Trophy,
   award: Award,
-} satisfies Record<string, LucideIcon>;
+  gift: Gift,
+} satisfies Record<NavIcon, LucideIcon>;
 
-export type BottomNavItem = {
-  href: string;
-  label: string;
-  icon: keyof typeof ICONS;
-  exact?: boolean;
-};
 
 /** App-style tab bar fixed to the bottom of the screen (servant / served). */
-export function BottomNav({ items }: { items: BottomNavItem[] }) {
+export function BottomNav({ items }: { items: NavSection[] }) {
   const pathname = usePathname();
   return (
     <nav className="fixed inset-x-0 bottom-0 z-20 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
       <ul className="mx-auto flex max-w-2xl">
         {items.map((item) => {
-          const Icon = ICONS[item.icon];
+          const Icon = ICONS[item.icon ?? "home"];
           const active = item.exact
             ? pathname === item.href
             : pathname === item.href || pathname.startsWith(`${item.href}/`);

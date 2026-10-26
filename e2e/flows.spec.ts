@@ -117,3 +117,19 @@ test("admin plans a meeting; the speaker sees it in their lessons and kids see i
   await expect(card).toBeVisible();
   await expect(card.getByText("خادم مينا")).toBeVisible();
 });
+
+test("sidebar lists the user's areas and sections; logout lives in the profile", async ({ page }) => {
+  await login(page, "01100000001");
+  await page.getByRole("button", { name: "افتح القائمة" }).click();
+  const menu = page.getByRole("dialog");
+  await expect(menu.getByRole("link", { name: "الحضور" })).toBeVisible();
+  await menu.getByRole("link", { name: "الترتيب" }).click();
+  await expect(page).toHaveURL(/\/servant\/board$/);
+  await expect(menu).toBeHidden();
+
+  await page.getByRole("button", { name: "افتح القائمة" }).click();
+  await menu.getByRole("link", { name: /حسابي/ }).click();
+  await expect(page).toHaveURL(/\/profile$/);
+  await page.getByRole("button", { name: "تسجيل خروج" }).click();
+  await expect(page).toHaveURL(/\/login/);
+});

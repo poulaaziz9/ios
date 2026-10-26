@@ -1,10 +1,9 @@
-import { ChevronRight, UserRound } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-import { logout } from "@/app/(auth)/actions";
 import { AppLogo } from "@/components/app-logo";
-import { Button } from "@/components/ui/button";
+import { AppSidebar } from "@/components/app-sidebar";
 import { strings } from "@/lib/strings";
 
 export function PageHeader({
@@ -36,19 +35,7 @@ export function PageHeader({
             {strings.app.name}
           </Link>
         )}
-        <div className="flex items-center gap-1">
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/profile">
-              <UserRound />
-              {strings.profile.title}
-            </Link>
-          </Button>
-          <form action={logout}>
-            <Button type="submit" variant="ghost" size="sm">
-              {strings.auth.logout}
-            </Button>
-          </form>
-        </div>
+        <AppSidebar />
       </div>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">

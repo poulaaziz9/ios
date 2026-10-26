@@ -1,6 +1,9 @@
 import "server-only";
 
+import { cache } from "react";
+
 import type { Database } from "@/lib/database.types";
+import type { AreaKind } from "@/lib/nav";
 import { strings } from "@/lib/strings";
 import { createClient } from "@/lib/supabase/server";
 
@@ -14,16 +17,19 @@ export type Destination = {
   subtitle: string;
   /** Pending memberships are listed but not enterable yet. */
   disabled?: boolean;
+  /** Which area this is (for its sections in the sidebar) and its church/service id. */
+  kind: AreaKind;
+  id?: string;
 };
 
-const ROLE_PATH: Record<MemberRole, string> = {
+const ROLE_PATH: Record<MemberRole, "manage" | "servant" | "home"> = {
   service_admin: "manage",
   servant: "servant",
   served: "home",
 };
 
-/** Every place the user can go after login, in a stable order. */
-export async function getDestinations(userId: string): Promise<Destination[]> {
+/** Every place the user can go after login, in a stable order. Cached per request. */
+export const getDestinations = cache(async (userId: string): Promise<Destination[]> => {
   const supabase = await createClient();
   const [profile, churchRoles, memberships] = await Promise.all([
     supabase.from("profiles").select("is_super_admin").eq("id", userId).maybeSingle(),
@@ -46,6 +52,7 @@ export async function getDestinations(userId: string): Promise<Destination[]> {
       href: "/admin",
       title: strings.home.platformAdmin,
       subtitle: strings.home.platformAdminHint,
+      kind: "admin",
     });
   }
   for (const cr of churchRoles.data ?? []) {
@@ -53,6 +60,8 @@ export async function getDestinations(userId: string): Promise<Destination[]> {
       href: `/church/${cr.church_id}`,
       title: cr.churches?.name ?? "",
       subtitle: strings.home.churchAdmin,
+      kind: "church",
+      id: cr.church_id,
     });
   }
   for (const m of memberships.data ?? []) {
@@ -64,7 +73,9 @@ export async function getDestinations(userId: string): Promise<Destination[]> {
         ? strings.home.pending
         : [strings.home.roles[m.role], m.services?.churches?.name].filter(Boolean).join(" · "),
       disabled: pending,
+      kind: ROLE_PATH[m.role],
+      id: m.service_id,
     });
   }
   return out;
-}
+});

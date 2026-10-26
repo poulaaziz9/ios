@@ -447,8 +447,16 @@ export const strings = {
     locked: "لسه",
     leaderboard: "الترتيب",
   },
+  sidebar: {
+    open: "افتح القائمة",
+    close: "اقفل القائمة",
+    myAccount: "حسابي",
+    pending: "مستني الموافقة",
+  },
   profile: {
     title: "حسابي",
+    logout: "تسجيل خروج",
+    logoutHint: "هتخرج من حسابك على الجهاز ده.",
     photo: "الصورة",
     choosePhoto: "اختار صورة",
     removePhoto: "شيل الصورة",
