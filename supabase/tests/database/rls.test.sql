@@ -550,7 +550,7 @@ select throws_ok(
 select tests.as_user('admin_a1');
 select matches((select code from public.create_join_code(tests.uid('class_a1y'))), '^[A-Z2-9]{6}$', 'create_join_code: generates a 6-char code');
 select ok(
-  (select expires_at > now() from public.create_join_code(tests.uid('class_a1y'), current_date)),
+  (select expires_at > now() from public.create_join_code(tests.uid('class_a1y'), public.cairo_today())),
   'create_join_code: expiry is end of the chosen day');
 select throws_ok(format('select public.create_join_code(%L)', tests.uid('class_a2x')), '42501', null,
   'create_join_code: not for other services');
@@ -779,6 +779,31 @@ select throws_ok(format($$select * from public.submit_competition(%L, '{}')$$, t
 select is(
   (select score from public.submit_competition(tests.uid('comp_capped'), (select answers from tests.capped_key))),
   1, 'submit_competition: score capped at max_points');
+select is(
+  (select total_points from public.v_service_leaderboard where service_id = tests.uid('svc_a1') and user_id = tests.uid('newkid')),
+  (select sum(points)::int from public.points_ledger where service_id = tests.uid('svc_a1') and user_id = tests.uid('newkid')),
+  'submit_competition: competition points count in the kid''s total');
+select is(
+  (select sum(points)::int from public.points_ledger where reason = 'competition' and user_id = tests.uid('newkid')),
+  (select sum(score)::int from public.competition_entries where user_id = tests.uid('newkid')),
+  'submit_competition: every submitted score is in the ledger');
+select is(
+  (select array_agg(row(my_answer, is_correct)::text order by question) from public.my_competition_review(tests.uid('comp_live'))),
+  array[row(1, true)::text, row(0, false)::text], 'review: the kid sees which answers were right');
+select is(
+  (select count(*)::int from public.my_competition_review(tests.uid('comp_live')) where correct_index is not null),
+  0, 'review: correct answers stay hidden while the competition is open');
+reset role;
+update public.competitions set ends_at = now() - interval '1 minute' where id = tests.uid('comp_live');
+select tests.as_user('newkid');
+select is(
+  (select array_agg(correct_index order by question) from public.my_competition_review(tests.uid('comp_live'))),
+  array[1, 2], 'review: correct answers revealed after it ends');
+reset role;
+update public.competitions set ends_at = null where id = tests.uid('comp_live');
+select tests.as_user('outsider');
+select throws_ok(format('select * from public.my_competition_review(%L)', tests.uid('comp_live')),
+  '42501', null, 'review: only for kids who submitted');
 reset role;
 
 select tests.as_user('kid_y');
@@ -840,6 +865,29 @@ select is(
   (select sum(points)::int from public.points_ledger where source_id = tests.uid('redemption1')),
   0, 'decide_redemption: rejecting after approval refunds');
 select is((select stock from public.gifts where id = tests.uid('gift_cheap')), 1, 'decide_redemption: refund returns stock');
+reset role;
+
+-- A pending request that is rejected never touches the ledger; its
+-- reserved points become spendable again.
+select tests.new_id('redemption2');
+select tests.as_user('newkid');
+update tests.ids set id = public.redeem_gift(tests.uid('gift_cheap')) where name = 'redemption2';
+select is(
+  public.my_available_points(tests.uid('svc_a1')),
+  (select sum(points)::int from public.points_ledger where user_id = tests.uid('newkid') and service_id = tests.uid('svc_a1')) - 5,
+  'redeem_gift: second request reserves the points again');
+reset role;
+select tests.as_user('admin_a1');
+select lives_ok(format('select public.decide_redemption(%L, ''rejected'')', tests.uid('redemption2')),
+  'decide_redemption: admin rejects a pending request');
+reset role;
+select is((select count(*)::int from public.points_ledger where source_id = tests.uid('redemption2')), 0,
+  'decide_redemption: rejecting a pending request takes no points');
+select tests.as_user('newkid');
+select is(
+  public.my_available_points(tests.uid('svc_a1')),
+  (select sum(points)::int from public.points_ledger where user_id = tests.uid('newkid') and service_id = tests.uid('svc_a1')),
+  'decide_redemption: rejected request releases the reserved points');
 reset role;
 
 -- Achievements engine

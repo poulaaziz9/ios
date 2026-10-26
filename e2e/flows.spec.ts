@@ -30,9 +30,13 @@ test.describe.serial("served kid ↔ service admin", () => {
     await expect(page.getByText("جاوبت ٣ صح من ٣")).toBeVisible();
     await expect(page.getByText("كسبت ٣٠ نقطة")).toBeVisible();
 
-    // One attempt only.
+    await expect(page.getByText("النقط اتضافت لمجموعك ✓")).toBeVisible();
+
+    // One attempt only; reopening shows the score and the corrected sheet.
     await page.reload();
-    await expect(page.getByText("نتيجتك: ٣٠ نقطة")).toBeVisible();
+    await expect(page.getByText("كسبت ٣٠ نقطة")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "التصحيح" })).toBeVisible();
+    await expect(page.getByText("الإجابات الصح هتظهر بعد ما المسابقة تخلص.")).toBeVisible();
   });
 
   test("kid requests a gift, which reserves points", async ({ page }) => {
@@ -57,6 +61,25 @@ test.describe.serial("served kid ↔ service admin", () => {
 
     await page.getByRole("link", { name: "النقاط" }).click();
     await expect(page.locator("li", { hasText: "أبانوب هاني" }).first()).toContainText("-60");
+  });
+
+  // Runs after the kid solved the quiz, so the new questions don't change it.
+  test("admin uploads competition questions from an Excel file", async ({ page }) => {
+    await login(page, "01000000003");
+    await page.goto("/s/20000000-0000-4000-a000-000000000001/manage/competitions/50000000-0000-4000-a000-000000000001");
+    await page.getByText("رفع الأسئلة من ملف").click();
+
+    // A broken file adds nothing and says which rows to fix.
+    await page.getByLabel("الملف (.xlsx أو .csv)").setInputFiles("e2e/fixtures/questions-bad.csv");
+    await page.getByRole("button", { name: "ارفع الأسئلة" }).click();
+    await expect(page.getByText(/سطر ٢: لازم اختيارين على الأقل/)).toBeVisible();
+    await expect(page.getByText(/سطر ٣: الإجابة الصحيحة لازم تكون رقم من ١ لـ ٢/)).toBeVisible();
+
+    await page.getByLabel("الملف (.xlsx أو .csv)").setInputFiles("e2e/fixtures/questions.xlsx");
+    await page.getByRole("button", { name: "ارفع الأسئلة" }).click();
+    await expect(page.getByText("اتضاف ٢ سؤال ✓")).toBeVisible();
+    await expect(page.getByText("سؤال إكسل ١: مين بنى الفلك؟")).toBeVisible();
+    await expect(page.getByText("سؤال إكسل ٢: كام سفر في الكتاب المقدس الأرثوذكسي؟")).toBeVisible();
   });
 });
 

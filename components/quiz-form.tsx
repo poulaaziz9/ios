@@ -1,6 +1,7 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useActionState, useEffect, useState } from "react";
 
 import type { QuizState } from "@/app/s/[serviceId]/home/actions";
 import { FormError } from "@/components/form-error";
@@ -23,6 +24,12 @@ export function QuizForm({
   const [state, formAction] = useActionState(action, {});
   const [answered, setAnswered] = useState<Record<string, number>>({});
   const complete = questions.every((q) => q.id in answered);
+  const router = useRouter();
+
+  // Once graded, reload the page: it then shows the score with the corrected sheet.
+  useEffect(() => {
+    if (state.result) router.refresh();
+  }, [state.result, router]);
 
   if (state.result) {
     const { score, correct, total } = state.result;

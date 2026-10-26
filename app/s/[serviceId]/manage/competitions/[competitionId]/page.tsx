@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { ActionForm } from "@/components/action-form";
+import { ImportQuestionsForm } from "@/components/import-questions-form";
 import { CompetitionFields } from "@/components/competition-fields";
 import { SubmitButton } from "@/components/submit-button";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +18,7 @@ import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 import {
   addQuestion,
+  importQuestions,
   deleteCompetition,
   deleteQuestion,
   saveCompetition,
@@ -152,6 +154,11 @@ export default async function ManageCompetitionPage({
               </div>
               <SubmitButton className="self-start">{t.saveQuestion}</SubmitButton>
             </ActionForm>
+          </details>
+
+          <details className="rounded-lg border p-3">
+            <summary className="cursor-pointer font-medium text-primary">{t.import.title}</summary>
+            <ImportQuestionsForm action={importQuestions.bind(null, serviceId, comp.id)} />
           </details>
         </CardContent>
       </Card>

@@ -7,6 +7,7 @@ import { fromError, text, type ActionState } from "@/lib/action-result";
 import type { Database } from "@/lib/database.types";
 import { strings } from "@/lib/strings";
 import { createClient } from "@/lib/supabase/server";
+import { MAX_QUESTIONS, parseCsv, parseQuestionRows } from "@/lib/question-import";
 import { imageFromForm, uploadImage } from "@/lib/upload";
 
 // Authorization is enforced in Postgres (RLS + RPC checks on is_service_admin).
@@ -349,6 +350,62 @@ export async function addQuestion(
   });
   revalidate(serviceId);
   return fromError(error);
+}
+
+// Many questions at once from an Excel (.xlsx) or CSV file.
+export async function importQuestions(
+  serviceId: string,
+  competitionId: string,
+  _prev: ActionState & { added?: number },
+  formData: FormData,
+): Promise<ActionState & { added?: number }> {
+  const t = strings.competitions.import;
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) return { error: t.noFile };
+  if (file.size > 1024 * 1024) return { error: t.tooBig };
+
+  let rows: unknown[][];
+  const name = file.name.toLowerCase();
+  try {
+    if (name.endsWith(".xlsx")) {
+      const { readSheet } = await import("read-excel-file/node");
+      rows = await readSheet(Buffer.from(await file.arrayBuffer()));
+    } else if (name.endsWith(".csv") || name.endsWith(".txt")) {
+      rows = parseCsv(await file.text());
+    } else {
+      return { error: t.badType };
+    }
+  } catch {
+    return { error: t.unreadable };
+  }
+
+  const defaultPoints = Math.max(0, Number.parseInt(text(formData, "points"), 10) || 0);
+  const { questions, errors } = parseQuestionRows(rows, defaultPoints);
+  if (errors.length) {
+    const list = errors.slice(0, 5).map((e) => (e.row ? t.rowError(e.row, e.message) : e.message));
+    return { error: [t.fixRows, ...list, errors.length > 5 ? t.moreErrors(errors.length - 5) : ""].filter(Boolean).join("\n") };
+  }
+  if (!questions.length) return { error: t.empty };
+
+  const supabase = await createClient();
+  if (formData.get("replace") === "on") {
+    const { error } = await supabase.from("competition_questions").delete().eq("competition_id", competitionId);
+    if (error) return fromError(error);
+  }
+  const { data: last } = await supabase
+    .from("competition_questions")
+    .select("sort_order")
+    .eq("competition_id", competitionId)
+    .order("sort_order", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const start = (last?.sort_order ?? 0) + 1;
+  const { error } = await supabase
+    .from("competition_questions")
+    .insert(questions.slice(0, MAX_QUESTIONS).map((q, i) => ({ ...q, competition_id: competitionId, sort_order: start + i })));
+  revalidate(serviceId);
+  if (error) return fromError(error);
+  return { ok: true, added: questions.length };
 }
 
 export async function deleteQuestion(serviceId: string, questionId: string) {

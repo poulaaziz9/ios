@@ -832,6 +832,11 @@ isOneToOne: false
 "my_available_points":
 { Args: { "p_service": string }; Returns: number
                            },
+"my_competition_review":
+{ Args: { "p_competition": string }; Returns: {
+              "correct_index": number,"is_correct": boolean,"my_answer": number,"options": Json,"points": number,"question": string,"question_id": string
+            }[]
+                           },
 "my_points":
 { Args: { "p_service": string }; Returns: {
               "class_id": string,"class_rank": number,"class_total": number,"role": Database["public"]['Enums']["member_role"],"service_rank": number,"service_total": number

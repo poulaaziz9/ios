@@ -2,8 +2,8 @@ import { ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { CompetitionReview } from "@/components/competition-review";
 import { QuizForm } from "@/components/quiz-form";
-import { Card, CardContent } from "@/components/ui/card";
 import { isUuid, requireUserId } from "@/lib/auth/session";
 import { isPast } from "@/lib/format";
 import { strings } from "@/lib/strings";
@@ -55,9 +55,7 @@ export default async function CompetitionPage({
         {comp.description && <p className="mt-1 text-muted-foreground">{comp.description}</p>}
       </div>
       {entry ? (
-        <Card>
-          <CardContent className="text-center text-lg font-semibold">{t.yourScore(entry.score)}</CardContent>
-        </Card>
+        <CompetitionReview competitionId={comp.id} score={entry.score} />
       ) : ended ? (
         <p className="text-muted-foreground">{t.errors.closed}</p>
       ) : (
