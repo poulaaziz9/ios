@@ -4,6 +4,7 @@ import { Award, CalendarCheck, CalendarDays, ClipboardCheck, Gift, Home, Trophy,
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { CountBadge } from "@/components/count-badge";
 import type { NavSection, NavIcon } from "@/lib/nav";
 import { cn } from "@/lib/utils";
 
@@ -40,7 +41,10 @@ export function BottomNav({ items }: { items: NavSection[] }) {
                   active && "font-semibold text-primary",
                 )}
               >
-                <Icon className="size-6" />
+                <span className="relative">
+                  <Icon className="size-6" />
+                  {!!item.badge && <CountBadge count={item.badge} className="absolute -end-2.5 -top-1.5" />}
+                </span>
                 {item.label}
               </Link>
             </li>

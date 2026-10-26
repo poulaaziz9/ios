@@ -18,12 +18,16 @@ export type AreaKind = "admin" | "church" | "manage" | "servant" | "home";
 export function areaSections(kind: AreaKind, id?: string): NavSection[] {
   switch (kind) {
     case "admin":
-      return [{ href: "/admin", label: strings.home.platformAdmin, exact: true }];
+      return [
+        { href: "/admin", label: strings.admin.churches, exact: true },
+        { href: "/admin/feedback", label: strings.feedback.title },
+      ];
     case "church": {
       const base = `/church/${id}`;
       return [
         { href: base, label: strings.church.services, exact: true },
         { href: `${base}/servants`, label: strings.church.servants },
+        { href: `${base}/feedback`, label: strings.feedback.title },
       ];
     }
     case "manage": {
@@ -72,8 +76,7 @@ export function areaSections(kind: AreaKind, id?: string): NavSection[] {
   }
 }
 
-/** Pending gift requests of a service admin area, shown as a badge. */
-export function withRequestsBadge(sections: NavSection[], serviceId: string, count: number): NavSection[] {
-  const href = `/s/${serviceId}/manage/requests`;
-  return sections.map((s) => (s.href === href && count > 0 ? { ...s, badge: count } : s));
+/** Puts notification counts on sections, keyed by the section's href. */
+export function withBadges(sections: NavSection[], counts: Record<string, number>): NavSection[] {
+  return sections.map((s) => (counts[s.href] ? { ...s, badge: counts[s.href] } : s));
 }

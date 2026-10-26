@@ -1056,6 +1056,127 @@ select is(tests.affected(format($$ delete from public.meetings where id = %L $$,
 reset role;
 
 -- ===========================================================================
+-- Alerts: kids absent from the last meetings, servants not visiting
+-- ===========================================================================
+insert into public.services (id, church_id, name) values (tests.new_id('svc_alert'), tests.uid('church_a'), 'alerts');
+select tests.create_user('al_admin', '+201090000201');
+select tests.create_user('al_servant', '+201090000202');
+select tests.create_user('al_servant_idle', '+201090000203');
+select tests.create_user('al_kid_absent', '+201090000204');
+select tests.create_user('al_kid_ok', '+201090000205');
+select tests.create_user('al_kid_new', '+201090000206');
+select tests.create_user('al_kid_other', '+201090000207');
+insert into public.service_members (service_id, user_id, role, status, created_at) values
+  (tests.uid('svc_alert'), tests.uid('al_admin'), 'service_admin', 'active', now() - interval '60 days'),
+  (tests.uid('svc_alert'), tests.uid('al_servant'), 'servant', 'active', now() - interval '60 days'),
+  (tests.uid('svc_alert'), tests.uid('al_servant_idle'), 'servant', 'active', now() - interval '60 days'),
+  (tests.uid('svc_alert'), tests.uid('al_kid_absent'), 'served', 'active', now() - interval '60 days'),
+  (tests.uid('svc_alert'), tests.uid('al_kid_ok'), 'served', 'active', now() - interval '60 days'),
+  (tests.uid('svc_alert'), tests.uid('al_kid_other'), 'served', 'active', now() - interval '60 days'),
+  (tests.uid('svc_alert'), tests.uid('al_kid_new'), 'served', 'active', now());
+insert into public.servant_assignments (service_id, servant_id, served_id) values
+  (tests.uid('svc_alert'), tests.uid('al_servant'), tests.uid('al_kid_absent')),
+  (tests.uid('svc_alert'), tests.uid('al_servant_idle'), tests.uid('al_kid_other'));
+-- Four meeting days; al_kid_absent came only to the first, al_kid_other
+-- missed the last three, al_kid_ok came to all.
+insert into public.meeting_attendance (service_id, served_id, meeting_date, present)
+select tests.uid('svc_alert'), k.id, public.cairo_today() - d, true
+from generate_series(7, 28, 7) d
+cross join lateral (values (tests.uid('al_kid_ok'))) k(id);
+insert into public.meeting_attendance (service_id, served_id, meeting_date, present) values
+  (tests.uid('svc_alert'), tests.uid('al_kid_absent'), public.cairo_today() - 28, true),
+  (tests.uid('svc_alert'), tests.uid('al_kid_other'), public.cairo_today() - 28, true);
+insert into public.visits (service_id, servant_id, served_id, visit_type, visited_at) values
+  (tests.uid('svc_alert'), tests.uid('al_servant'), tests.uid('al_kid_absent'), 'call', now() - interval '2 days'),
+  (tests.uid('svc_alert'), tests.uid('al_servant_idle'), tests.uid('al_kid_other'), 'call', now() - interval '12 days');
+
+select tests.as_user('al_admin');
+select is(
+  (select array_agg(row(full_name, missed)::text order by full_name) from public.absent_served(tests.uid('svc_alert'))),
+  array[row('al_kid_absent', 3)::text, row('al_kid_other', 3)::text],
+  'absent_served: kids who missed more than two meetings in a row (not new kids)');
+select is(
+  (select servant_name from public.absent_served(tests.uid('svc_alert')) where served_id = tests.uid('al_kid_absent')),
+  'al_servant', 'absent_served: shows the responsible servant');
+select is((select count(*)::int from public.absent_served(tests.uid('svc_alert'), 4)), 0, 'absent_served: threshold is adjustable');
+select is(
+  (select array_agg(full_name) from public.idle_servants(tests.uid('svc_alert'))),
+  array['al_servant_idle'], 'idle_servants: servants with no visit for more than 10 days');
+reset role;
+
+select tests.as_user('al_servant');
+select is(
+  (select array_agg(full_name) from public.absent_served(tests.uid('svc_alert'))),
+  array['al_kid_absent'], 'absent_served: a servant sees only their own kids');
+select throws_ok(format('select * from public.idle_servants(%L)', tests.uid('svc_alert')), '42501', null,
+  'idle_servants: admins only');
+reset role;
+select tests.as_user('al_kid_ok');
+select throws_ok(format('select * from public.absent_served(%L)', tests.uid('svc_alert')), '42501', null,
+  'absent_served: not for kids');
+reset role;
+
+-- ===========================================================================
+-- Complaints & suggestions: church admins ↔ super admin
+-- ===========================================================================
+select tests.new_id('fb1');
+select tests.as_user('church_admin_a');
+select lives_ok(
+  format($$ insert into public.feedback (id, church_id, kind, subject, body) values (%L, %L, 'complaint', 'موضوع', 'تفاصيل') $$,
+    tests.uid('fb1'), tests.uid('church_a')),
+  'feedback: a church admin sends a complaint');
+select throws_ok(
+  format($$ insert into public.feedback (church_id, kind, subject, body) values (%L, 'suggestion', 's', 'b') $$, tests.uid('church_b')),
+  '42501', null, 'feedback: only for their own church');
+select is(tests.affected(format($$ update public.feedback set status = 'closed' where id = %L $$, tests.uid('fb1'))), 0,
+  'feedback: church admins cannot change the status');
+select throws_ok(
+  format($$ insert into public.feedback_replies (feedback_id, body, from_platform) values (%L, 'x', true) $$, tests.uid('fb1')),
+  '42501', null, 'feedback: church admins cannot reply as the platform');
+reset role;
+
+select tests.as_user('church_admin_b');
+select is((select count(*)::int from public.feedback where id = tests.uid('fb1')), 0, 'feedback: other churches cannot see it');
+reset role;
+select tests.as_user('admin_a1');
+select is((select count(*)::int from public.feedback), 0, 'feedback: service admins cannot see it');
+select throws_ok(
+  format($$ insert into public.feedback (church_id, kind, subject, body) values (%L, 'suggestion', 's', 'b') $$, tests.uid('church_a')),
+  '42501', null, 'feedback: service admins cannot send');
+reset role;
+
+select tests.as_user('super');
+select is((select status::text from public.feedback where id = tests.uid('fb1')), 'open', 'feedback: super admin sees it, waiting');
+select lives_ok(
+  format($$ insert into public.feedback_replies (feedback_id, body, from_platform) values (%L, 'تم', true) $$, tests.uid('fb1')),
+  'feedback: super admin replies');
+select is((select status::text from public.feedback where id = tests.uid('fb1')), 'answered', 'feedback: reply marks it answered');
+reset role;
+-- The whole test is one transaction (one now()); pretend the church last
+-- looked before the reply.
+update public.feedback set church_seen_at = church_seen_at - interval '1 minute' where id = tests.uid('fb1');
+
+select tests.as_user('church_admin_a');
+select ok(
+  (select last_message_at > church_seen_at from public.feedback where id = tests.uid('fb1')),
+  'feedback: the church sees a new reply');
+select lives_ok(format('select public.mark_feedback_seen(%L)', tests.uid('fb1')), 'feedback: church admin opens it');
+select ok(
+  (select last_message_at <= church_seen_at from public.feedback where id = tests.uid('fb1')),
+  'feedback: opening clears the new-reply mark');
+select lives_ok(
+  format($$ insert into public.feedback_replies (feedback_id, body) values (%L, 'شكراً بس لسه') $$, tests.uid('fb1')),
+  'feedback: church admin answers back');
+select is((select status::text from public.feedback where id = tests.uid('fb1')), 'open', 'feedback: church reply reopens it');
+select is((select count(*)::int from public.feedback_replies where feedback_id = tests.uid('fb1')), 2, 'feedback: church sees the whole thread');
+reset role;
+
+select tests.as_user('super');
+select is(tests.affected(format($$ update public.feedback set status = 'closed' where id = %L $$, tests.uid('fb1'))), 1,
+  'feedback: super admin closes it');
+reset role;
+
+-- ===========================================================================
 -- Cascade: super admin deletes a church with everything under it
 -- ===========================================================================
 select tests.as_user('super');

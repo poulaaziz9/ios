@@ -3,8 +3,8 @@ import { notFound } from "next/navigation";
 import { NavTabs } from "@/components/nav-tabs";
 import { PageHeader } from "@/components/page-header";
 import { requireServiceArea } from "@/lib/auth/session";
-import { pendingGiftRequests } from "@/lib/gift-requests";
-import { areaSections, withRequestsBadge } from "@/lib/nav";
+import { areaBadges } from "@/lib/alerts";
+import { areaSections, withBadges } from "@/lib/nav";
 import { strings } from "@/lib/strings";
 import { createClient } from "@/lib/supabase/server";
 
@@ -29,7 +29,7 @@ export default async function ManageLayout({
     <main className="mx-auto flex min-h-dvh w-full max-w-2xl flex-col gap-5 px-4 py-6">
       <PageHeader title={service.name} subtitle={t.subtitle} />
       <NavTabs
-        tabs={withRequestsBadge(areaSections("manage", serviceId), serviceId, await pendingGiftRequests(serviceId))}
+        tabs={withBadges(areaSections("manage", serviceId), await areaBadges("manage", serviceId))}
       />
       {children}
     </main>

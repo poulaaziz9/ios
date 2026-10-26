@@ -181,6 +181,58 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"feedback": {
+                  Row: {
+                    "author_id": string | null,"body": string,"church_id": string,"church_seen_at": string,"created_at": string,"id": string,"kind": Database["public"]['Enums']["feedback_kind"],"last_message_at": string,"status": Database["public"]['Enums']["feedback_status"],"subject": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "author_id"?: string | null,"body": string,"church_id": string,"church_seen_at"?: string,"created_at"?: string,"id"?: string,"kind": Database["public"]['Enums']["feedback_kind"],"last_message_at"?: string,"status"?: Database["public"]['Enums']["feedback_status"],"subject": string
+                  }
+                  Update: {
+                    "author_id"?: string | null,"body"?: string,"church_id"?: string,"church_seen_at"?: string,"created_at"?: string,"id"?: string,"kind"?: Database["public"]['Enums']["feedback_kind"],"last_message_at"?: string,"status"?: Database["public"]['Enums']["feedback_status"],"subject"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "feedback_author_id_fkey"
+      columns: ["author_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "feedback_church_id_fkey"
+      columns: ["church_id"]
+isOneToOne: false
+      referencedRelation: "churches"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"feedback_replies": {
+                  Row: {
+                    "author_id": string | null,"body": string,"created_at": string,"feedback_id": string,"from_platform": boolean,"id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "author_id"?: string | null,"body": string,"created_at"?: string,"feedback_id": string,"from_platform"?: boolean,"id"?: string
+                  }
+                  Update: {
+                    "author_id"?: string | null,"body"?: string,"created_at"?: string,"feedback_id"?: string,"from_platform"?: boolean,"id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "feedback_replies_author_id_fkey"
+      columns: ["author_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "feedback_replies_feedback_id_fkey"
+      columns: ["feedback_id"]
+isOneToOne: false
+      referencedRelation: "feedback"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"gift_redemptions": {
                   Row: {
                     "created_at": string,"decided_at": string | null,"decided_by": string | null,"gift_id": string,"id": string,"status": Database["public"]['Enums']["redemption_status"],"user_id": string
@@ -679,7 +731,12 @@ isOneToOne: false
                 }
           }
           Functions: {
-            "achievement_counts":
+            "absent_served":
+{ Args: { "p_min_missed"?: number,"p_service": string }; Returns: {
+              "class_id": string,"full_name": string,"last_present": string,"missed": number,"servant_id": string,"servant_name": string,"served_id": string
+            }[]
+                           },
+"achievement_counts":
 { Args: { "p_service": string }; Returns: {
               "achievement_id": string,"earned": number
             }[]
@@ -764,6 +821,9 @@ isOneToOne: false
 "evaluate_achievements":
 { Args: { "p_service": string,"p_user": string }; Returns: number
                            },
+"feedback_church_id":
+{ Args: { "p_feedback": string }; Returns: string
+                           },
 "find_user_by_phone":
 { Args: { "p_phone": string }; Returns: {
               "full_name": string,"id": string
@@ -778,6 +838,11 @@ isOneToOne: false
 "has_service_role":
 { Args: { "p_role": Database["public"]['Enums']["member_role"],"p_service": string }; Returns: boolean
                            },
+"idle_servants":
+{ Args: { "p_days"?: number,"p_service": string }; Returns: {
+              "assigned": number,"full_name": string,"last_visit": string,"servant_id": string
+            }[]
+                           },
 "is_active_member":
 { Args: { "p_role": Database["public"]['Enums']["member_role"],"p_service": string,"p_user": string }; Returns: boolean
                            },
@@ -785,6 +850,9 @@ isOneToOne: false
 { Args: { "p_served": string,"p_service": string }; Returns: boolean
                            },
 "is_church_admin":
+{ Args: { "p_church": string }; Returns: boolean
+                           },
+"is_church_admin_of":
 { Args: { "p_church": string }; Returns: boolean
                            },
 "is_service_admin":
@@ -809,6 +877,9 @@ isOneToOne: false
                            },
 "log_visit":
 { Args: { "p_notes"?: string,"p_served": string,"p_service": string,"p_type": Database["public"]['Enums']["visit_type"],"p_visited_at"?: string }; Returns: string
+                           },
+"mark_feedback_seen":
+{ Args: { "p_feedback": string }; Returns: undefined
                            },
 "mark_prep_attendance":
 { Args: { "p_present": boolean,"p_servant": string,"p_session": string }; Returns: undefined
@@ -916,7 +987,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "church_role": "church_admin"|"servant","member_role": "service_admin"|"servant"|"served","member_status": "pending"|"active"|"removed","point_reason": "competition"|"visit"|"preparation"|"attendance"|"manual"|"gift_redemption"|"achievement","redemption_status": "requested"|"approved"|"delivered"|"rejected","visit_type": "home"|"call"|"message"|"other"
+            "church_role": "church_admin"|"servant","feedback_kind": "complaint"|"suggestion","feedback_status": "open"|"answered"|"closed","member_role": "service_admin"|"servant"|"served","member_status": "pending"|"active"|"removed","point_reason": "competition"|"visit"|"preparation"|"attendance"|"manual"|"gift_redemption"|"achievement","redemption_status": "requested"|"approved"|"delivered"|"rejected","visit_type": "home"|"call"|"message"|"other"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -1036,7 +1107,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "church_role": ["church_admin", "servant"],"member_role": ["service_admin", "servant", "served"],"member_status": ["pending", "active", "removed"],"point_reason": ["competition", "visit", "preparation", "attendance", "manual", "gift_redemption", "achievement"],"redemption_status": ["requested", "approved", "delivered", "rejected"],"visit_type": ["home", "call", "message", "other"]
+            "church_role": ["church_admin", "servant"],"feedback_kind": ["complaint", "suggestion"],"feedback_status": ["open", "answered", "closed"],"member_role": ["service_admin", "servant", "served"],"member_status": ["pending", "active", "removed"],"point_reason": ["competition", "visit", "preparation", "attendance", "manual", "gift_redemption", "achievement"],"redemption_status": ["requested", "approved", "delivered", "rejected"],"visit_type": ["home", "call", "message", "other"]
           }
         }
 } as const

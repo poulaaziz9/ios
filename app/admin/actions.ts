@@ -66,3 +66,27 @@ export async function removeChurchAdmin(churchId: string, userId: string) {
     .eq("role", "church_admin");
   revalidatePath(`/admin/churches/${churchId}`);
 }
+
+// ---------------------------------------------------------------------------
+// Complaints & suggestions: the platform's replies and status
+// ---------------------------------------------------------------------------
+export async function replyToFeedback(
+  feedbackId: string,
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const body = text(formData, "body");
+  if (!body) return { error: strings.feedback.required };
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("feedback_replies")
+    .insert({ feedback_id: feedbackId, body, from_platform: true });
+  revalidatePath("/admin", "layout");
+  return fromError(error);
+}
+
+export async function setFeedbackStatus(feedbackId: string, status: "open" | "closed") {
+  const supabase = await createClient();
+  await supabase.from("feedback").update({ status }).eq("id", feedbackId);
+  revalidatePath("/admin", "layout");
+}

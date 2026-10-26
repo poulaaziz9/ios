@@ -1,9 +1,10 @@
-import { Gift } from "lucide-react";
+import { Gift, Home, UserX } from "lucide-react";
 import Link from "next/link";
 
 import { CountBadge } from "@/components/count-badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatRelative } from "@/lib/format";
+import { absentServed, idleServants } from "@/lib/alerts";
 import { pendingGiftRequests } from "@/lib/gift-requests";
 import { strings } from "@/lib/strings";
 import { createClient } from "@/lib/supabase/server";
@@ -24,7 +25,7 @@ export default async function ManageDashboardPage({
       .eq("role", role)
       .eq("status", status);
 
-  const [classes, servants, served, pending, top, visits, giftRequests] = await Promise.all([
+  const [classes, servants, served, pending, top, visits, giftRequests, absent, idle] = await Promise.all([
     supabase.from("classes").select("id", { count: "exact", head: true }).eq("service_id", serviceId),
     members("servant", "active"),
     members("served", "active"),
@@ -45,7 +46,16 @@ export default async function ManageDashboardPage({
       .order("visited_at", { ascending: false })
       .limit(5),
     pendingGiftRequests(serviceId),
+    absentServed(serviceId),
+    idleServants(serviceId),
   ]);
+
+  // Things waiting for the admin, shown on top as notifications.
+  const notices = [
+    { href: "requests", count: giftRequests, text: t.giftRequestsWaiting(giftRequests), icon: Gift },
+    { href: "attendance", count: absent.length, text: strings.alerts.absentNotice(absent.length), icon: UserX },
+    { href: "visits", count: idle.length, text: strings.alerts.idleNotice(idle.length), icon: Home },
+  ].filter((n) => n.count > 0);
 
   const stats = [
     { label: t.stats.classes, value: classes.count ?? 0, href: "classes" },
@@ -56,16 +66,17 @@ export default async function ManageDashboardPage({
 
   return (
     <>
-      {giftRequests > 0 && (
+      {notices.map((n) => (
         <Link
-          href={`/s/${serviceId}/manage/requests`}
+          key={n.href}
+          href={`/s/${serviceId}/manage/${n.href}`}
           className="flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 font-medium hover:bg-destructive/10"
         >
-          <Gift className="size-6 text-destructive" />
-          <span className="flex-1">{t.giftRequestsWaiting(giftRequests)}</span>
-          <CountBadge count={giftRequests} />
+          <n.icon className="size-6 shrink-0 text-destructive" />
+          <span className="flex-1">{n.text}</span>
+          <CountBadge count={n.count} />
         </Link>
-      )}
+      ))}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {stats.map((s) => (
           <Link

@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { BottomNav } from "@/components/bottom-nav";
 import { PageHeader } from "@/components/page-header";
 import { requireServiceArea } from "@/lib/auth/session";
-import { areaSections } from "@/lib/nav";
+import { areaBadges } from "@/lib/alerts";
+import { areaSections, withBadges } from "@/lib/nav";
 import { strings } from "@/lib/strings";
 import { createClient } from "@/lib/supabase/server";
 
@@ -27,7 +28,7 @@ export default async function ServantLayout({
         <PageHeader title={service.name} subtitle={strings.home.roles.servant} />
         {children}
       </main>
-      <BottomNav items={areaSections("servant", serviceId)} />
+      <BottomNav items={withBadges(areaSections("servant", serviceId), await areaBadges("servant", serviceId))} />
     </>
   );
 }

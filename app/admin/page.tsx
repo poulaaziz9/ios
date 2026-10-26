@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { strings } from "@/lib/strings";
 import { createClient } from "@/lib/supabase/server";
 import { createChurch } from "./actions";
+import { AdminTabs } from "./admin-tabs";
 
 const t = strings.admin;
 
@@ -23,6 +24,7 @@ export default async function AdminPage() {
   return (
     <>
       <PageHeader title={t.title} />
+      <AdminTabs />
 
       <section className="flex flex-col gap-3">
         <h2 className="text-lg font-semibold">{t.churches}</h2>

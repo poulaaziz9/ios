@@ -1,8 +1,8 @@
 import { SidebarMenu, type SidebarGroup } from "@/components/sidebar-menu";
 import { requireUserId } from "@/lib/auth/session";
 import { getDestinations } from "@/lib/destinations";
-import { pendingGiftRequests } from "@/lib/gift-requests";
-import { areaSections, withRequestsBadge } from "@/lib/nav";
+import { areaBadges } from "@/lib/alerts";
+import { areaSections, withBadges } from "@/lib/nav";
 import { signedUrls } from "@/lib/storage";
 import { createClient } from "@/lib/supabase/server";
 
@@ -20,10 +20,7 @@ export async function AppSidebar() {
 
   const groups: SidebarGroup[] = await Promise.all(
     destinations.map(async (d) => {
-      let sections = d.disabled || d.kind === "admin" ? [] : areaSections(d.kind, d.id);
-      if (d.kind === "manage" && d.id && !d.disabled) {
-        sections = withRequestsBadge(sections, d.id, await pendingGiftRequests(d.id));
-      }
+      const sections = d.disabled ? [] : withBadges(areaSections(d.kind, d.id), await areaBadges(d.kind, d.id));
       return { href: d.href, title: d.title, subtitle: d.subtitle, disabled: d.disabled, sections };
     }),
   );

@@ -6,5 +6,12 @@ export default async function ManageAttendancePage({
 }: PageProps<"/s/[serviceId]/manage/attendance">) {
   const { serviceId } = await params;
   const date = String((await searchParams).date ?? "");
-  return <AttendanceSheet serviceId={serviceId} date={date} basePath={`/s/${serviceId}/manage/attendance`} />;
+  return (
+    <AttendanceSheet
+      serviceId={serviceId}
+      date={date}
+      basePath={`/s/${serviceId}/manage/attendance`}
+      showServant
+    />
+  );
 }

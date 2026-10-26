@@ -190,3 +190,37 @@ insert into public.meetings (service_id, class_id, meeting_date, start_time, top
    'داود وجليات', null, '00000000-0000-4000-b000-000000000002'),
   ('20000000-0000-4000-a000-000000000001', null, (now() at time zone 'Africa/Cairo')::date + 16, '18:00',
    'القديس مارجرجس', 'سيرة الشهيد العظيم', '00000000-0000-4000-b000-000000000001');
+
+-- ---------------------------------------------------------------------------
+-- Attendance history (for the absence alert) and an idle servant
+-- ---------------------------------------------------------------------------
+-- Members joined two months ago, so past meetings count for them.
+update public.service_members set created_at = now() - interval '60 days'
+where service_id = '20000000-0000-4000-a000-000000000001';
+-- Three past meetings; بيشوي ماجد missed all three.
+insert into public.meeting_attendance (service_id, served_id, meeting_date, present)
+select '20000000-0000-4000-a000-000000000001', k.id, (now() at time zone 'Africa/Cairo')::date - d, true
+from generate_series(7, 21, 7) d
+cross join (values
+  ('00000000-0000-4000-c000-000000000001'::uuid), ('00000000-0000-4000-c000-000000000002'::uuid),
+  ('00000000-0000-4000-c000-000000000004'::uuid), ('00000000-0000-4000-c000-000000000005'::uuid)
+) k(id);
+insert into public.meeting_attendance (service_id, served_id, meeting_date, present) values
+  ('20000000-0000-4000-a000-000000000001', '00000000-0000-4000-c000-000000000006', (now() at time zone 'Africa/Cairo')::date - 21, true);
+-- خادم مينا's last visit was 12 days ago.
+update public.visits set visited_at = now() - interval '12 days'
+where servant_id = '00000000-0000-4000-b000-000000000001';
+
+-- ---------------------------------------------------------------------------
+-- Complaints & suggestions
+-- ---------------------------------------------------------------------------
+insert into public.feedback (id, church_id, author_id, kind, subject, body, created_at, last_message_at, church_seen_at) values
+  ('60000000-0000-4000-a000-000000000001', '10000000-0000-4000-a000-000000000001', '00000000-0000-4000-a000-000000000002',
+   'suggestion', 'إشعارات على الموبايل', 'ياريت التطبيق يبعت إشعار للخدام قبل الاجتماع بيوم.',
+   now() - interval '3 days', now() - interval '3 days', now() - interval '3 days'),
+  ('60000000-0000-4000-a000-000000000002', '10000000-0000-4000-a000-000000000001', '00000000-0000-4000-a000-000000000002',
+   'complaint', 'صور الأفاتار بطيئة', 'صور المخدومين بتاخد وقت عشان تظهر على الموبايل.',
+   now() - interval '1 day', now() - interval '1 day', now() - interval '1 day');
+insert into public.feedback_replies (feedback_id, author_id, from_platform, body, created_at) values
+  ('60000000-0000-4000-a000-000000000001', '00000000-0000-4000-a000-000000000001', true,
+   'فكرة حلوة، هنضيفها في التحديث الجاي إن شاء الله.', now() - interval '2 days');

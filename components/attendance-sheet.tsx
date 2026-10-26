@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { AbsentAlert } from "@/components/alert-cards";
 import { AttendanceForm } from "@/components/attendance-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,11 +22,14 @@ export async function AttendanceSheet({
   date: requested,
   basePath,
   aboveBottomNav,
+  showServant,
 }: {
   serviceId: string;
   date?: string;
   basePath: string;
   aboveBottomNav?: boolean;
+  /** Admins see who is responsible for each absent kid. */
+  showServant?: boolean;
 }) {
   const today = cairoToday();
   const date = requested && /^\d{4}-\d{2}-\d{2}$/.test(requested) && requested <= today ? requested : today;
@@ -47,6 +51,7 @@ export async function AttendanceSheet({
 
   return (
     <div className="flex flex-col gap-5">
+      <AbsentAlert serviceId={serviceId} showServant={showServant} />
       <section className="flex flex-col gap-3 rounded-xl border bg-card p-4 shadow-sm">
         <div>
           <h2 className="text-lg font-semibold">{t.title}</h2>

@@ -1,3 +1,4 @@
+import { IdleServantsAlert } from "@/components/alert-cards";
 import { AutoSubmitSelect } from "@/components/auto-submit-select";
 import { Segmented } from "@/components/segmented";
 import { formatRelative, isOlderThan } from "@/lib/format";
@@ -29,6 +30,7 @@ export default async function VisitAssignmentsPage({
 
   return (
     <>
+      <IdleServantsAlert serviceId={serviceId} />
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <span className="text-muted-foreground">{t.notVisitedFor}</span>
         <Segmented

@@ -102,3 +102,31 @@ export async function removeServant(churchId: string, userId: string) {
   await supabase.rpc("remove_church_servant", { p_church: churchId, p_user: userId });
   revalidatePath(churchPath(churchId), "layout");
 }
+
+// ---------------------------------------------------------------------------
+// Complaints & suggestions to the platform
+// ---------------------------------------------------------------------------
+export async function sendFeedback(churchId: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
+  const subject = text(formData, "subject");
+  const body = text(formData, "body");
+  const kind = text(formData, "kind") === "complaint" ? "complaint" : "suggestion";
+  if (!subject || !body) return { error: strings.feedback.required };
+  const supabase = await createClient();
+  const { error } = await supabase.from("feedback").insert({ church_id: churchId, kind, subject, body });
+  revalidatePath(churchPath(churchId), "layout");
+  return fromError(error);
+}
+
+export async function replyFromChurch(
+  churchId: string,
+  feedbackId: string,
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const body = text(formData, "body");
+  if (!body) return { error: strings.feedback.required };
+  const supabase = await createClient();
+  const { error } = await supabase.from("feedback_replies").insert({ feedback_id: feedbackId, body });
+  revalidatePath(churchPath(churchId), "layout");
+  return fromError(error);
+}

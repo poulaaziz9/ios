@@ -160,3 +160,47 @@ test("sidebar lists the user's areas and sections; logout lives in the profile",
   await page.getByRole("button", { name: "تسجيل خروج" }).click();
   await expect(page).toHaveURL(/\/login/);
 });
+
+test("alerts: absent kids and servants who stopped visiting", async ({ browser }) => {
+  const admin = await browser.newPage();
+  await login(admin, "01000000003");
+  await expect(admin.getByText(/مخدوم.* غايب.* أكتر من اجتماعين/)).toBeVisible();
+  await expect(admin.getByText("فيه خادم مفتقدش من أكتر من ١٠ أيام")).toBeVisible();
+  await admin.getByRole("link", { name: /مخدوم.* غايب/ }).click();
+  const absent = admin.locator("section", { hasText: "مخدومين غايبين" });
+  await expect(absent.locator("li", { hasText: "بيشوي ماجد" })).toContainText("الخادم: خادم مينا");
+  await admin.goto(admin.url().replace(/attendance.*$/, "visits"));
+  await expect(admin.locator("section", { hasText: "خدام مفتقدوش" }).getByText("خادم مينا")).toBeVisible();
+
+  // The responsible servant sees their own absent kid.
+  const servant = await browser.newPage();
+  await login(servant, "01100000001");
+  await servant.getByRole("link", { name: /الحضور/ }).click();
+  await expect(servant.locator("section", { hasText: "مخدومين غايبين" }).getByText("بيشوي ماجد")).toBeVisible();
+});
+
+test("church admin sends a suggestion; the super admin answers it", async ({ browser }) => {
+  const subject = `اقتراح تجربة ${Date.now()}`;
+  const church = await browser.newPage();
+  await login(church, "01000000002");
+  await church.getByRole("link", { name: /الشكاوى والمقترحات/ }).click();
+  await church.getByLabel("العنوان").fill(subject);
+  await church.getByLabel("التفاصيل").fill("ياريت نقدر نطبع كشف الحضور.");
+  await church.getByRole("button", { name: "ابعت", exact: true }).click();
+  await expect(church.locator("li", { hasText: subject })).toContainText("مستني الرد");
+
+  const superAdmin = await browser.newPage();
+  await login(superAdmin, "01000000001");
+  await superAdmin.goto("/admin/feedback");
+  await superAdmin.getByRole("link", { name: subject }).click();
+  await superAdmin.getByPlaceholder("ردك").fill("تمام، هنضيفها.");
+  await superAdmin.getByRole("button", { name: "ابعت الرد" }).click();
+  await expect(superAdmin.getByText("تمام، هنضيفها.")).toBeVisible();
+
+  await church.reload();
+  const item = church.locator("li", { hasText: subject });
+  await expect(item).toContainText("اتردّ عليه");
+  await expect(item).toContainText("رد جديد");
+  await item.click();
+  await expect(church.getByText("تمام، هنضيفها.")).toBeVisible();
+});
