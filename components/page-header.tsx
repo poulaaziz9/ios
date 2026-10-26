@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { logout } from "@/app/(auth)/actions";
+import { AppLogo } from "@/components/app-logo";
 import { Button } from "@/components/ui/button";
 import { strings } from "@/lib/strings";
 
@@ -30,7 +31,8 @@ export function PageHeader({
             {strings.common.back}
           </Link>
         ) : (
-          <Link href="/?pick=1" className="font-bold text-primary">
+          <Link href="/?pick=1" className="flex items-center gap-2 font-bold text-primary">
+            <AppLogo />
             {strings.app.name}
           </Link>
         )}
