@@ -2,6 +2,28 @@
 
 الخطوات دي بتطلّع التطبيق أونلاين لأول مرة. محتاج حساب على [supabase.com](https://supabase.com) و[vercel.com](https://vercel.com) وGitHub.
 
+## من الموبايل (من غير كمبيوتر)
+
+كل ده بيتعمل من متصفح الموبايل (Chrome أو Safari). افتح المواقع بوضع "Desktop site" لو الصفحة ضيقة.
+
+1. **ادمج الـPR:** افتح [PR #1](https://github.com/poulaaziz9/ios/pull/1) ودوس **Merge pull request**.
+2. **Supabase:** على [supabase.com](https://supabase.com) اعمل **New project** واحفظ الـ**Database password** اللي هتختارها.
+   - من **Authentication → Sign In / Providers → Email** اقفل **Confirm email**.
+3. **مفاتيح لـGitHub:** في الريبو على GitHub روح **Settings → Secrets and variables → Actions → New repository secret** وضيف التلاتة دول:
+   - `SUPABASE_ACCESS_TOKEN`: من supabase.com → صورتك → **Account preferences → Access Tokens → Generate new token**.
+   - `SUPABASE_PROJECT_REF`: الكود اللي في لينك المشروع، بعد `/project/`.
+   - `SUPABASE_DB_PASSWORD`: كلمة سر الداتابيز من خطوة ٢.
+4. **جهّز الداتابيز:** في الريبو روح **Actions → Database setup → Run workflow**.
+   - لو عايز تجرب بالحسابات التجريبية (كلمة السر `password123`) علّم على **demo_data**. ده للتجربة بس، متعملوش على النسخة الحقيقية.
+   - استنى لحد ما تبقى ✅.
+5. **Vercel:** على [vercel.com](https://vercel.com) اعمل تسجيل دخول بـGitHub، وبعدين **Add New → Project** واختار الريبو `ios`. قبل **Deploy** افتح **Environment Variables** وضيف:
+   - `NEXT_PUBLIC_SUPABASE_URL` و `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`: من Supabase → **Project Settings → API**.
+   - `NEXT_PUBLIC_SITE_URL`: سيبه دلوقتي، وبعد أول Deploy حط فيه اللينك اللي Vercel هيديهولك واعمل **Redeploy**.
+6. **افتح اللينك من الموبايل**، ومن قايمة المتصفح اختار **Add to Home Screen** عشان يبقى زي الأبلكيشن.
+7. **خلي نفسك الأمين العام:** خطوة ٣ تحت (سطر SQL واحد من **SQL Editor** في Supabase).
+
+الخطوات اللي تحت دي نفس الكلام من كمبيوتر.
+
 ## ١. مشروع Supabase
 
 1. اعمل مشروع جديد على Supabase. اختار منطقة قريبة من مصر (مثلاً `eu-central-1` فرانكفورت).
