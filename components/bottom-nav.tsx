@@ -1,15 +1,19 @@
 "use client";
 
-import { Award, CalendarCheck, Home, Trophy, Users, type LucideIcon } from "lucide-react";
+import { Award, CalendarCheck, ClipboardCheck, Home, Trophy, Users, type LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 
-const ICONS = { home: Home, users: Users, calendar: CalendarCheck, trophy: Trophy, award: Award } satisfies Record<
-  string,
-  LucideIcon
->;
+const ICONS = {
+  home: Home,
+  users: Users,
+  calendar: CalendarCheck,
+  attendance: ClipboardCheck,
+  trophy: Trophy,
+  award: Award,
+} satisfies Record<string, LucideIcon>;
 
 export type BottomNavItem = {
   href: string;

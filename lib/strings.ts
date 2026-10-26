@@ -140,6 +140,7 @@ export const strings = {
       codes: "أكواد الانضمام",
       points: "النقاط",
       visits: "الافتقاد",
+      attendance: "الحضور",
       prep: "التحضير",
       competitions: "المسابقات",
       posts: "البوستات",
@@ -255,7 +256,7 @@ export const strings = {
     },
   },
   servant: {
-    tabs: { home: "الرئيسية", served: "مخدوميني", prep: "التحضير", board: "الترتيب" },
+    tabs: { home: "الرئيسية", served: "مخدوميني", attendance: "الحضور", prep: "التحضير", board: "الترتيب" },
     myPoints: "نقاطي",
     rankAmongServants: (rank: number, total: number) =>
       `ترتيبك ${rank.toLocaleString("ar-EG")} من ${total.toLocaleString("ar-EG")} خادم`,
@@ -283,6 +284,25 @@ export const strings = {
     attended: "حضرت",
     missed: "محضرتش",
     upcoming: "جاية",
+  },
+  attendance: {
+    title: "حضور الاجتماع",
+    hint: "اختار تاريخ الاجتماع وعلّم على المخدومين اللي حضروا. أي خادم في الخدمة يقدر يسجل أو يعدّل.",
+    date: "تاريخ الاجتماع",
+    show: "اعرض",
+    search: "دوّر على اسم",
+    noClass: "من غير فصل",
+    noServed: "مفيش مخدومين في الخدمة لسه.",
+    selectAll: "علّم الكل",
+    clearAll: "شيل الكل",
+    presentCount: (n: number, total: number) =>
+      `${n.toLocaleString("ar-EG")} حاضر من ${total.toLocaleString("ar-EG")}`,
+    save: "احفظ الحضور",
+    saved: (n: number) => `اتسجل حضور ${n.toLocaleString("ar-EG")} مخدوم ✓`,
+    futureDate: "مينفعش تسجل حضور ليوم لسه مجاش.",
+    recent: "الاجتماعات اللي فاتت",
+    noRecent: "لسه محدش سجل حضور.",
+    attendedCount: (n: number) => `${n.toLocaleString("ar-EG")} حاضر`,
   },
   visits: {
     tabs: { assign: "التوزيع", log: "سجل الافتقاد" },

@@ -265,6 +265,38 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"meeting_attendance": {
+                  Row: {
+                    "created_at": string,"id": string,"meeting_date": string,"present": boolean,"recorded_by": string | null,"served_id": string,"service_id": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"meeting_date": string,"present"?: boolean,"recorded_by"?: string | null,"served_id": string,"service_id": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"meeting_date"?: string,"present"?: boolean,"recorded_by"?: string | null,"served_id"?: string,"service_id"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "meeting_attendance_recorded_by_fkey"
+      columns: ["recorded_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "meeting_attendance_served_id_fkey"
+      columns: ["served_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "meeting_attendance_service_id_fkey"
+      columns: ["service_id"]
+isOneToOne: false
+      referencedRelation: "services"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"point_rules": {
                   Row: {
                     "created_at": string,"points": number,"reason": Database["public"]['Enums']["point_reason"],"service_id": string
@@ -647,6 +679,9 @@ isOneToOne: false
 "can_see_profile":
 { Args: { "p_user": string }; Returns: boolean
                            },
+"can_take_attendance":
+{ Args: { "p_service": string }; Returns: boolean
+                           },
 "check_in_prep":
 { Args: { "p_session": string }; Returns: boolean
                            },
@@ -740,6 +775,11 @@ isOneToOne: false
 "mark_prep_attendance":
 { Args: { "p_present": boolean,"p_servant": string,"p_session": string }; Returns: undefined
                            },
+"meeting_attendance_sheet":
+{ Args: { "p_date": string,"p_service": string }; Returns: {
+              "avatar_url": string,"class_id": string,"full_name": string,"present": boolean,"served_id": string
+            }[]
+                           },
 "member_class_id":
 { Args: { "p_service": string,"p_user": string }; Returns: string
                            },
@@ -766,6 +806,11 @@ isOneToOne: false
                            },
 "prep_session_service_id":
 { Args: { "p_session": string }; Returns: string
+                           },
+"recent_meetings":
+{ Args: { "p_service": string }; Returns: {
+              "meeting_date": string,"present_count": number
+            }[]
                            },
 "redeem_gift":
 { Args: { "p_gift": string }; Returns: string
@@ -800,6 +845,9 @@ isOneToOne: false
                            },
 "set_join_code_expiry":
 { Args: { "p_code_id": string,"p_expires_on": string }; Returns: undefined
+                           },
+"set_meeting_attendance":
+{ Args: { "p_date": string,"p_present": (string)[],"p_service": string }; Returns: number
                            },
 "set_servant_services":
 { Args: { "p_church": string,"p_services": (string)[],"p_user": string }; Returns: undefined

@@ -72,3 +72,21 @@ test("servant logs a visit and earns the visit points", async ({ page }) => {
   await page.getByRole("link", { name: "الرئيسية" }).click();
   await expect(points).not.toHaveText(before);
 });
+
+test("any servant records meeting attendance for kids of the whole service", async ({ page }) => {
+  // خادمة مريم serves تانية إعدادي, yet can mark a kid from أولى إعدادي.
+  await login(page, "01100000002");
+  await page.getByRole("link", { name: "الحضور" }).click();
+  await expect(page.getByRole("heading", { name: "حضور الاجتماع" })).toBeVisible();
+
+  await page.getByPlaceholder("دوّر على اسم").fill("كيرلس");
+  const kid = page.getByRole("checkbox", { name: "كيرلس عادل" });
+  await kid.check();
+  await page.getByRole("button", { name: "احفظ الحضور" }).click();
+  await expect(page.getByText(/اتسجل حضور .* مخدوم ✓/)).toBeVisible();
+  await expect(kid).toBeChecked(); // still ticked on screen after saving
+
+  await page.reload();
+  await expect(page.getByRole("checkbox", { name: "كيرلس عادل" })).toBeChecked();
+  await expect(page.getByRole("heading", { name: "الاجتماعات اللي فاتت" })).toBeVisible();
+});

@@ -34,6 +34,7 @@ export default async function ManageLayout({
           { href: `${base}/members`, label: t.tabs.members },
           { href: `${base}/codes`, label: t.tabs.codes },
           { href: `${base}/points`, label: t.tabs.points },
+          { href: `${base}/attendance`, label: t.tabs.attendance },
           { href: `${base}/visits`, label: t.tabs.visits },
           { href: `${base}/prep`, label: t.tabs.prep },
           { href: `${base}/competitions`, label: t.tabs.competitions },

@@ -870,6 +870,90 @@ select ok(exists (select 1 from public.user_achievements where achievement_id = 
   'achievements: awarded right after the qualifying activity');
 
 -- ===========================================================================
+-- Meeting attendance: any servant of the service records which kids came
+-- ===========================================================================
+insert into public.point_rules (service_id, reason, points) values (tests.uid('svc_a1'), 'attendance', 5)
+  on conflict (service_id, reason) do update set points = 5;
+-- Own fixtures: two servants (in different classes, neither assigned) and two kids.
+select tests.create_user('att_servant_1', '+201090000101');
+select tests.create_user('att_servant_2', '+201090000102');
+select tests.create_user('att_kid_1', '+201090000103');
+select tests.create_user('att_kid_2', '+201090000104');
+insert into public.service_members (service_id, user_id, role, class_id, status) values
+  (tests.uid('svc_a1'), tests.uid('att_servant_1'), 'servant', tests.uid('class_a1x'), 'active'),
+  (tests.uid('svc_a1'), tests.uid('att_servant_2'), 'servant', tests.uid('class_a1y'), 'active'),
+  (tests.uid('svc_a1'), tests.uid('att_kid_1'), 'served', tests.uid('class_a1x'), 'active'),
+  (tests.uid('svc_a1'), tests.uid('att_kid_2'), 'served', tests.uid('class_a1y'), 'active');
+select tests.as_user('att_servant_1');
+select ok(
+  (select count(*) from public.meeting_attendance_sheet(tests.uid('svc_a1'), public.cairo_today())
+    where served_id in (tests.uid('att_kid_1'), tests.uid('att_kid_2')) and not present) = 2,
+  'attendance: servant sees every served kid of the service, all absent at first');
+select is(
+  public.set_meeting_attendance(tests.uid('svc_a1'), public.cairo_today(), array[tests.uid('att_kid_1'), tests.uid('att_kid_2')]),
+  2, 'attendance: any servant (not only the assigned one) records attendance');
+select is(
+  public.set_meeting_attendance(tests.uid('svc_a1'), public.cairo_today(), array[tests.uid('att_kid_1'), tests.uid('att_kid_2')]),
+  2, 'attendance: saving the same sheet again is a no-op');
+reset role;
+select is(
+  (select sum(points)::int from public.points_ledger where reason = 'attendance' and user_id = tests.uid('att_kid_1')),
+  5, 'attendance: present kid earns the attendance rule once');
+
+select tests.as_user('att_servant_2');
+select is(
+  public.set_meeting_attendance(tests.uid('svc_a1'), public.cairo_today(), array[tests.uid('att_kid_2')]),
+  1, 'attendance: another servant can correct the sheet');
+reset role;
+select is(
+  (select sum(points)::int from public.points_ledger where reason = 'attendance' and user_id = tests.uid('att_kid_1')),
+  0, 'attendance: unticking a kid reverses the points');
+select is(
+  (select present from public.meeting_attendance where served_id = tests.uid('att_kid_1') and meeting_date = public.cairo_today()),
+  false, 'attendance: unticked kid kept as absent');
+
+select tests.as_user('att_servant_2');
+select lives_ok(
+  format($$select public.set_meeting_attendance(%L, %L, array[%L, %L]::uuid[])$$,
+    tests.uid('svc_a1'), public.cairo_today(), tests.uid('att_kid_1'), tests.uid('att_kid_2')),
+  'attendance: re-ticking works');
+select is(
+  (select array_agg(present_count) from public.recent_meetings(tests.uid('svc_a1')) where meeting_date = public.cairo_today()),
+  array[2], 'attendance: recent meetings count who came');
+select throws_ok(
+  format($$select public.set_meeting_attendance(%L, %L, '{}')$$, tests.uid('svc_a1'), public.cairo_today() + 1),
+  'P0001', 'future_date', 'attendance: no future days');
+select throws_ok(
+  format($$select public.set_meeting_attendance(%L, %L, '{}')$$, tests.uid('svc_b1'), public.cairo_today()),
+  '42501', null, 'attendance: not in another service');
+select throws_ok(
+  format($$ insert into public.meeting_attendance (service_id, served_id, meeting_date) values (%L, %L, %L) $$,
+    tests.uid('svc_a1'), tests.uid('att_kid_1'), public.cairo_today() - 1),
+  '42501', null, 'attendance: no direct writes');
+reset role;
+select is(
+  (select sum(points)::int from public.points_ledger where reason = 'attendance' and user_id = tests.uid('att_kid_1')),
+  5, 'attendance: re-ticked kid earns the points again');
+
+select tests.as_user('att_kid_1');
+select throws_ok(
+  format($$select public.set_meeting_attendance(%L, %L, '{}')$$, tests.uid('svc_a1'), public.cairo_today()),
+  '42501', null, 'attendance: served kids cannot take attendance');
+select throws_ok(
+  format($$select * from public.meeting_attendance_sheet(%L, %L)$$, tests.uid('svc_a1'), public.cairo_today()),
+  '42501', null, 'attendance: served kids cannot read the sheet');
+select is(
+  (select array_agg(distinct served_id) from public.meeting_attendance where service_id = tests.uid('svc_a1')),
+  array[tests.uid('att_kid_1')], 'attendance: a kid sees only their own record');
+reset role;
+
+select tests.as_user('admin_a1');
+select is(
+  public.set_meeting_attendance(tests.uid('svc_a1'), public.cairo_today() - 7, array[tests.uid('att_kid_2')]),
+  1, 'attendance: service admin can record a past meeting');
+reset role;
+
+-- ===========================================================================
 -- Cascade: super admin deletes a church with everything under it
 -- ===========================================================================
 select tests.as_user('super');

@@ -43,3 +43,22 @@ export async function checkIn(serviceId: string, sessionId: string): Promise<Act
   if (error?.message === "not_today") return { error: strings.servant.notToday };
   return fromError(error);
 }
+
+// Meeting attendance: any servant (or admin) of the service saves who came.
+export async function saveAttendance(
+  serviceId: string,
+  date: string,
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const present = formData.getAll("served").map(String);
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("set_meeting_attendance", {
+    p_service: serviceId,
+    p_date: date,
+    p_present: present,
+  });
+  revalidatePath(`/s/${serviceId}`, "layout");
+  if (error?.message === "future_date") return { error: strings.attendance.futureDate };
+  return fromError(error);
+}
