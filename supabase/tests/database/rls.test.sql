@@ -479,6 +479,66 @@ select is((select count(*)::int from storage.objects where name like tests.uid('
 reset role;
 
 -- ===========================================================================
+-- Phase 3 RPCs: finding users, managing servants
+-- ===========================================================================
+select tests.as_user('super');
+select ok((select count(*) from public.search_users('kid')) >= 4, 'search_users: super admin finds by name');
+select is((select full_name from public.search_users('90000013')), 'outsider', 'search_users: super admin finds by phone digits');
+select is((select count(*)::int from public.search_users('k')), 0, 'search_users: ignores 1-char queries');
+reset role;
+
+select tests.as_user('church_admin_a');
+select throws_ok($$ select * from public.search_users('kid') $$, '42501', null, 'search_users: church admin cannot browse users');
+select is((select full_name from public.find_user_by_phone('+201090000013')), 'outsider', 'find_user_by_phone: church admin exact lookup');
+select is((select count(*)::int from public.find_user_by_phone('+2010900000')), 0, 'find_user_by_phone: no partial matches');
+select is(
+  (select cardinality(service_ids) from public.church_servants(tests.uid('church_a')) where user_id = tests.uid('servant_x')),
+  2, 'church_servants: lists services per servant');
+select is(
+  (select in_pool from public.church_servants(tests.uid('church_a')) where user_id = tests.uid('servant_y')),
+  false, 'church_servants: includes servants not in the pool');
+select throws_ok(format('select * from public.church_servants(%L)', tests.uid('church_b')), '42501', null,
+  'church_servants: not for other churches');
+select throws_ok(format('select * from public.church_admins(%L)', tests.uid('church_b')), '42501', null,
+  'church_admins: not for other churches');
+select lives_ok(
+  format('select public.set_servant_services(%L, %L, array[%L]::uuid[])', tests.uid('church_a'), tests.uid('servant_x'), tests.uid('svc_a1')),
+  'set_servant_services: church admin narrows a servant to one service');
+select is(
+  (select count(*)::int from public.service_members where user_id = tests.uid('servant_x') and role = 'servant'),
+  1, 'set_servant_services: other memberships removed');
+select lives_ok(
+  format('select public.set_servant_services(%L, %L, array[%L, %L]::uuid[])',
+    tests.uid('church_a'), tests.uid('kid_b'), tests.uid('svc_a1'), tests.uid('svc_a2')),
+  'set_servant_services: any existing user can become a servant');
+select ok(exists (select 1 from public.church_roles where user_id = tests.uid('kid_b') and role = 'servant'),
+  'set_servant_services: adds to the church pool');
+select throws_ok(
+  format('select public.set_servant_services(%L, %L, array[%L]::uuid[])', tests.uid('church_a'), tests.uid('outsider'), tests.uid('svc_b1')),
+  '42501', null, 'set_servant_services: cannot use a service of another church');
+select throws_ok(
+  format('select public.set_servant_services(%L, %L, array[]::uuid[])', tests.uid('church_b'), tests.uid('outsider')),
+  '42501', null, 'set_servant_services: not for other churches');
+select lives_ok(
+  format('select public.remove_church_servant(%L, %L)', tests.uid('church_a'), tests.uid('servant_y')),
+  'remove_church_servant: church admin removes a servant');
+reset role;
+select is((select count(*)::int from public.service_members where user_id = tests.uid('servant_y')), 0, 'remove_church_servant: memberships gone');
+select is((select count(*)::int from public.servant_assignments where servant_id = tests.uid('servant_y')), 0, 'trigger: removed servant loses assignments');
+update public.service_members set status = 'removed' where user_id = tests.uid('kid_x');
+select is((select count(*)::int from public.servant_assignments where served_id = tests.uid('kid_x')), 0, 'trigger: deactivated kid loses assignment');
+
+select tests.as_user('admin_a1');
+select throws_ok($$ select * from public.find_user_by_phone('+201090000013') $$, '42501', null, 'find_user_by_phone: not for service admins');
+select throws_ok(
+  format('select public.set_servant_services(%L, %L, array[]::uuid[])', tests.uid('church_a'), tests.uid('outsider')),
+  '42501', null, 'set_servant_services: not for service admins');
+reset role;
+select tests.as_user('outsider');
+select throws_ok($$ select * from public.find_user_by_phone('+201090000001') $$, '42501', null, 'find_user_by_phone: not for regular users');
+reset role;
+
+-- ===========================================================================
 -- Cascade: super admin deletes a church with everything under it
 -- ===========================================================================
 select tests.as_user('super');

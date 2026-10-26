@@ -618,6 +618,16 @@ isOneToOne: false
 "can_see_profile":
 { Args: { "p_user": string }; Returns: boolean
                            },
+"church_admins":
+{ Args: { "p_church": string }; Returns: {
+              "created_at": string,"full_name": string,"phone": string,"user_id": string
+            }[]
+                           },
+"church_servants":
+{ Args: { "p_church": string }; Returns: {
+              "full_name": string,"in_pool": boolean,"phone": string,"service_ids": (string)[],"user_id": string
+            }[]
+                           },
 "competition_answer_key":
 { Args: { "p_competition": string }; Returns: {
               "correct_index": number,"question_id": string
@@ -625,6 +635,11 @@ isOneToOne: false
                            },
 "competition_service_id":
 { Args: { "p_competition": string }; Returns: string
+                           },
+"find_user_by_phone":
+{ Args: { "p_phone": string }; Returns: {
+              "full_name": string,"id": string
+            }[]
                            },
 "gift_service_id":
 { Args: { "p_gift": string }; Returns: string
@@ -653,8 +668,19 @@ isOneToOne: false
 "prep_session_service_id":
 { Args: { "p_session": string }; Returns: string
                            },
+"remove_church_servant":
+{ Args: { "p_church": string,"p_user": string }; Returns: undefined
+                           },
+"search_users":
+{ Args: { "p_query": string }; Returns: {
+              "full_name": string,"id": string,"phone": string
+            }[]
+                           },
 "service_church_id":
 { Args: { "p_service": string }; Returns: string
+                           },
+"set_servant_services":
+{ Args: { "p_church": string,"p_services": (string)[],"p_user": string }; Returns: undefined
                            },
 "try_uuid":
 { Args: { "p_text": string }; Returns: string

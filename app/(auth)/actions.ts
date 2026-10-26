@@ -1,9 +1,11 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { normalizePhone, phoneToAuthEmail, resolveIdentifier } from "@/lib/auth/identifier";
 import { safeNextPath } from "@/lib/auth/next-path";
+import { LAST_DESTINATION_COOKIE } from "@/lib/destinations";
 import { strings } from "@/lib/strings";
 import { createClient } from "@/lib/supabase/server";
 
@@ -76,5 +78,7 @@ export async function signup(
 export async function logout() {
   const supabase = await createClient();
   await supabase.auth.signOut();
+  // Shared phones: the next person must not land in this user's service.
+  (await cookies()).delete(LAST_DESTINATION_COOKIE);
   redirect("/login");
 }

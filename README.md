@@ -56,6 +56,17 @@ Every table has RLS with default deny; see `supabase/migrations/*_rls_*.sql`. Th
 - Leaderboards: `v_service_leaderboard` / `v_class_leaderboard`, filtered to services the caller belongs to.
 - Storage paths: `avatars/<user_id>/…`, `service-media/<service_id>/…`. Both buckets are private, so use signed URLs.
 
+## Admin areas
+
+| Route | Who | What |
+|---|---|---|
+| `/` | everyone | "اختار الخدمة" picker; skips straight to the only/last-picked place (`?pick=1` to choose again) |
+| `/admin` | super admin | churches CRUD; appoint/remove church admins (search users by name or phone) |
+| `/church/[churchId]` | church admin | services CRUD, service admins, servants pool |
+| `/s/[serviceId]/manage·servant·home` | per role | placeholders until phases 4–7 |
+
+Church admins find people by **exact phone number only** (`find_user_by_phone`), so they can't browse the platform's users. Only super admins get a name/phone search (`search_users`).
+
 ## Project layout
 
 ```
