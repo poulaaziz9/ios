@@ -426,6 +426,8 @@ select is((select count(*)::int from public.v_service_leaderboard where service_
 select is(
   (select total_points from public.v_class_leaderboard where class_id = tests.uid('class_a1x') and user_id = tests.uid('kid_x')),
   10, 'served: class leaderboard total');
+select is((select count(*)::int from public.v_service_leaderboard where role = 'servant'), 0, 'served: cannot see servants leaderboard');
+select is((select count(*)::int from public.v_class_leaderboard where role = 'servant'), 0, 'served: cannot see servants class leaderboard');
 select is((select count(*)::int from public.prep_sessions), 0, 'served: cannot see prep sessions');
 select is((select count(*)::int from public.visits), 0, 'served: cannot see visits');
 select is((select count(*)::int from public.servant_assignments), 0, 'served: cannot see assignments');
