@@ -649,6 +649,86 @@ select throws_ok(
 reset role;
 
 -- ===========================================================================
+-- Phase 6: visits and preparation
+-- ===========================================================================
+insert into public.servant_assignments (service_id, servant_id, served_id)
+values (tests.uid('svc_a1'), tests.uid('servant_x'), tests.uid('newkid'));
+insert into public.point_rules (service_id, reason, points) values (tests.uid('svc_a1'), 'preparation', 15);
+insert into public.prep_sessions (id, service_id, title, session_date) values
+  (tests.new_id('prep_today'), tests.uid('svc_a1'), 'today', public.cairo_today()),
+  (tests.new_id('prep_past'), tests.uid('svc_a1'), 'past', public.cairo_today() - 3);
+select tests.new_id('visit1');
+
+select tests.as_user('servant_x');
+update tests.ids set id = public.log_visit(tests.uid('svc_a1'), tests.uid('newkid'), 'home', 'زيارة') where name = 'visit1';
+select is(
+  (select points from public.points_ledger where source_id = tests.uid('visit1')),
+  10, 'log_visit: assigned servant earns the visit rule points');
+select lives_ok(format($$select public.log_visit(%L, %L, 'call')$$, tests.uid('svc_a1'), tests.uid('newkid')),
+  'log_visit: a second contact the same day is recorded');
+select is(
+  (select count(*)::int from public.points_ledger l join public.visits v on v.id = l.source_id
+    where v.served_id = tests.uid('newkid')),
+  1, 'log_visit: only one visit per kid per day earns points');
+select throws_ok(format($$select public.log_visit(%L, %L, 'home')$$, tests.uid('svc_a1'), tests.uid('kid_y')),
+  '42501', null, 'log_visit: only for assigned kids');
+select throws_ok(
+  format($$select public.log_visit(%L, %L, 'home', null, now() + interval '2 days')$$, tests.uid('svc_a1'), tests.uid('newkid')),
+  '22023', null, 'log_visit: no future dates');
+select is(
+  (select row(visits_count, phone is not null)::text from public.my_assigned(tests.uid('svc_a1')) where served_id = tests.uid('newkid')),
+  row(2, true)::text, 'my_assigned: counts visits and shows the kid''s phone');
+select is(public.check_in_prep(tests.uid('prep_today')), true, 'check_in_prep: checks in on the day');
+select is(public.check_in_prep(tests.uid('prep_today')), false, 'check_in_prep: second check-in is a no-op');
+select is(
+  (select count(*)::int from public.points_ledger where reason = 'preparation' and user_id = tests.uid('servant_x')),
+  1, 'check_in_prep: points once');
+select throws_ok(format('select public.check_in_prep(%L)', tests.uid('prep_past')), 'P0001', 'not_today',
+  'check_in_prep: only on the session day');
+reset role;
+
+select tests.as_user('newkid');
+select throws_ok(format('select * from public.my_assigned(%L)', tests.uid('svc_a1')), '42501', null, 'my_assigned: servants only');
+select throws_ok(format('select public.check_in_prep(%L)', tests.uid('prep_today')), '42501', null, 'check_in_prep: servants only');
+reset role;
+
+select tests.as_user('admin_a1');
+select is(
+  (select servant_name from public.visit_overview(tests.uid('svc_a1')) where served_id = tests.uid('newkid')),
+  'servant_x', 'visit_overview: shows each kid''s servant');
+select is(tests.affected(format('delete from public.visits where id = %L', tests.uid('visit1'))), 1, 'visits: admin deletes a wrong visit');
+select is(
+  (select sum(points)::int from public.points_ledger where source_id = tests.uid('visit1') or source_id in
+    (select id from public.points_ledger where source_id = tests.uid('visit1'))),
+  0, 'visits: deleting a visit reverses its points');
+select lives_ok(format('select public.mark_prep_attendance(%L, %L, true)', tests.uid('prep_past'), tests.uid('servant_x')),
+  'mark_prep_attendance: admin marks present');
+select ok(
+  (select present from public.prep_attendance_sheet(tests.uid('prep_past')) where servant_id = tests.uid('servant_x')),
+  'prep_attendance_sheet: shows attendance');
+select lives_ok(format('select public.mark_prep_attendance(%L, %L, false)', tests.uid('prep_past'), tests.uid('servant_x')),
+  'mark_prep_attendance: admin marks absent');
+select is(
+  (select sum(points)::int from public.points_ledger where reason = 'preparation' and user_id = tests.uid('servant_x')),
+  15, 'mark_prep_attendance: unmarking reverses the points');
+select throws_ok(format('select public.mark_prep_attendance(%L, %L, true)', tests.uid('prep_past'), tests.uid('newkid')),
+  '22023', null, 'mark_prep_attendance: servants only');
+select is(tests.affected(format('delete from public.prep_sessions where id = %L', tests.uid('prep_today'))), 1,
+  'prep_sessions: admin deletes a session');
+select is(
+  (select coalesce(sum(points), 0)::int from public.points_ledger where reason = 'preparation' and user_id = tests.uid('servant_x')),
+  0, 'prep_sessions: deleting a session reverses its attendance points');
+reset role;
+-- Deleting a user who has visits/points must not be blocked by the trigger.
+select lives_ok(format('delete from auth.users where id = %L', tests.uid('servant_x')), 'trigger: deleting a user still works');
+
+-- Activity in church B, so the cascade below exercises the reversal trigger.
+insert into public.visits (id, service_id, servant_id, served_id, visit_type)
+values (tests.new_id('visit_b'), tests.uid('svc_b1'), tests.uid('church_admin_b'), tests.uid('kid_b'), 'home');
+insert into public.points_ledger (service_id, user_id, points, reason, source_id)
+values (tests.uid('svc_b1'), tests.uid('church_admin_b'), 10, 'visit', tests.uid('visit_b'));
+
+-- ===========================================================================
 -- Cascade: super admin deletes a church with everything under it
 -- ===========================================================================
 select tests.as_user('super');

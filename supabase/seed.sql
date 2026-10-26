@@ -116,7 +116,8 @@ insert into public.point_rules (service_id, reason, points) values
 
 insert into public.prep_sessions (id, service_id, title, session_date) values
   ('40000000-0000-4000-a000-000000000001', '20000000-0000-4000-a000-000000000001', 'تحضير درس الأحد', current_date - 3),
-  ('40000000-0000-4000-a000-000000000002', '20000000-0000-4000-a000-000000000001', 'تحضير درس الأحد الجاي', current_date + 4);
+  ('40000000-0000-4000-a000-000000000002', '20000000-0000-4000-a000-000000000001', 'تحضير درس الأحد الجاي', current_date + 4),
+  ('40000000-0000-4000-a000-000000000003', '20000000-0000-4000-a000-000000000001', 'اجتماع الخدام', (now() at time zone 'Africa/Cairo')::date);
 
 insert into public.prep_attendance (session_id, servant_id, checked_in_at) values
   ('40000000-0000-4000-a000-000000000001', '00000000-0000-4000-b000-000000000001', now() - interval '3 days');

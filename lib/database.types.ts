@@ -615,6 +615,9 @@ isOneToOne: false
 "cairo_end_of_day":
 { Args: { "p_date": string }; Returns: string
                            },
+"cairo_today":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
 "can_see_church":
 { Args: { "p_church": string }; Returns: boolean
                            },
@@ -626,6 +629,9 @@ isOneToOne: false
                            },
 "can_see_profile":
 { Args: { "p_user": string }; Returns: boolean
+                           },
+"check_in_prep":
+{ Args: { "p_session": string }; Returns: boolean
                            },
 "church_admins":
 { Args: { "p_church": string }; Returns: {
@@ -705,8 +711,19 @@ isOneToOne: false
 "ledger_add":
 { Args: { "p_note"?: string,"p_points": number,"p_reason": Database["public"]['Enums']["point_reason"],"p_service": string,"p_source"?: string,"p_user": string }; Returns: string
                            },
+"log_visit":
+{ Args: { "p_notes"?: string,"p_served": string,"p_service": string,"p_type": Database["public"]['Enums']["visit_type"],"p_visited_at"?: string }; Returns: string
+                           },
+"mark_prep_attendance":
+{ Args: { "p_present": boolean,"p_servant": string,"p_session": string }; Returns: undefined
+                           },
 "member_class_id":
 { Args: { "p_service": string,"p_user": string }; Returns: string
+                           },
+"my_assigned":
+{ Args: { "p_service": string }; Returns: {
+              "avatar_url": string,"class_id": string,"class_name": string,"full_name": string,"last_visit_at": string,"last_visit_type": Database["public"]['Enums']["visit_type"],"phone": string,"served_id": string,"visits_count": number
+            }[]
                            },
 "my_points":
 { Args: { "p_service": string }; Returns: {
@@ -715,6 +732,11 @@ isOneToOne: false
                            },
 "normalize_join_code":
 { Args: { "p_code": string }; Returns: string
+                           },
+"prep_attendance_sheet":
+{ Args: { "p_session": string }; Returns: {
+              "checked_in_at": string,"full_name": string,"present": boolean,"servant_id": string
+            }[]
                            },
 "prep_session_service_id":
 { Args: { "p_session": string }; Returns: string
@@ -755,6 +777,11 @@ isOneToOne: false
                            },
 "visible_phone":
 { Args: { "p_user": string }; Returns: string
+                           },
+"visit_overview":
+{ Args: { "p_service": string }; Returns: {
+              "class_id": string,"full_name": string,"last_visit_at": string,"servant_id": string,"servant_name": string,"served_id": string
+            }[]
                            }
           }
           Enums: {

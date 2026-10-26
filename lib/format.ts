@@ -30,3 +30,18 @@ export function toCairoDateInput(value: string | Date) {
 export function expiryDay(expiresAt: string) {
   return new Date(new Date(expiresAt).getTime() - 1000);
 }
+
+/** Today's date (yyyy-mm-dd) in Cairo. */
+export function cairoToday() {
+  return toCairoDateInput(new Date());
+}
+
+/** A yyyy-mm-dd day as a timestamp at noon Cairo time (safe for display/storage). */
+export function cairoNoon(day: string) {
+  return `${day}T12:00:00+02:00`;
+}
+
+/** True if never, or more than `days` days ago. */
+export function isOlderThan(value: string | null | undefined, days: number) {
+  return !value || Date.now() - new Date(value).getTime() > days * 86_400_000;
+}

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 import { fromError, text, type ActionState } from "@/lib/action-result";
 import type { Database } from "@/lib/database.types";
@@ -203,4 +204,72 @@ export async function saveRules(
   const { error } = await supabase.from("point_rules").upsert(rows, { onConflict: "service_id,reason" });
   revalidate(serviceId);
   return error ? fromError(error) : { ok: true };
+}
+
+// ---------------------------------------------------------------------------
+// Visitation (افتقاد)
+// ---------------------------------------------------------------------------
+/** Assign a served kid to a servant ("" = unassign). */
+export async function assignServant(serviceId: string, servedId: string, formData: FormData) {
+  const servantId = text(formData, "servant_id");
+  const supabase = await createClient();
+  if (servantId) {
+    await supabase
+      .from("servant_assignments")
+      .upsert(
+        { service_id: serviceId, served_id: servedId, servant_id: servantId },
+        { onConflict: "service_id,served_id" },
+      );
+  } else {
+    await supabase.from("servant_assignments").delete().eq("service_id", serviceId).eq("served_id", servedId);
+  }
+  revalidate(serviceId);
+}
+
+/** Delete a wrong visit (its points are reversed by a DB trigger). */
+export async function deleteVisit(serviceId: string, visitId: string) {
+  const supabase = await createClient();
+  await supabase.from("visits").delete().eq("id", visitId).eq("service_id", serviceId);
+  revalidate(serviceId);
+}
+
+// ---------------------------------------------------------------------------
+// Preparation (تحضير)
+// ---------------------------------------------------------------------------
+export async function createSession(
+  serviceId: string,
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  const title = text(formData, "title");
+  const date = text(formData, "session_date");
+  if (!title || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return { error: strings.common.nameRequired };
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("prep_sessions")
+    .insert({ service_id: serviceId, title, session_date: date });
+  revalidate(serviceId);
+  return fromError(error);
+}
+
+export async function deleteSession(serviceId: string, sessionId: string) {
+  const supabase = await createClient();
+  await supabase.from("prep_sessions").delete().eq("id", sessionId).eq("service_id", serviceId);
+  revalidate(serviceId);
+  redirect(`/s/${serviceId}/manage/prep`);
+}
+
+export async function markAttendance(
+  serviceId: string,
+  sessionId: string,
+  servantId: string,
+  present: boolean,
+) {
+  const supabase = await createClient();
+  await supabase.rpc("mark_prep_attendance", {
+    p_session: sessionId,
+    p_servant: servantId,
+    p_present: present,
+  });
+  revalidate(serviceId);
 }
