@@ -3,8 +3,8 @@
 -- edge function, run by pg_cron) creates them:
 --   * meeting_reminder: the day before a meeting, to every kid who will see it
 --     (the message is written per kid by AI when an API key is configured);
---   * visit_reminder: every day to a servant whose assigned kids weren't
---     visited lately, until they are.
+--   * visit_reminder: Sunday to Thursday, to a servant whose assigned kids
+--     weren't visited yet this week (Saturday to Thursday), until they are.
 
 create table public.notifications (
   id uuid primary key default gen_random_uuid(),
@@ -117,10 +117,21 @@ as $$
   order by m.id, p.full_name;
 $$;
 
--- Servants with assigned kids nobody visited in p_days days (or ever). One
--- row per servant and service. Asked daily, so a servant is reminded every
--- day until those visits are logged (the job saves at most one a day).
-create function public.visit_reminder_targets(p_days int default 7)
+-- The visiting week runs Saturday to Thursday (Cairo): the Saturday that
+-- starts the current week (today, if today is Saturday).
+create function public.cairo_week_start()
+returns date
+language sql stable set search_path = ''
+as $$
+  select d - ((extract(dow from d)::int + 1) % 7)
+  from (select (now() at time zone 'Africa/Cairo')::date as d) t;
+$$;
+
+-- Servants with assigned kids nobody has visited yet this week (since
+-- Saturday). One row per servant and service. The job asks Sunday to
+-- Thursday, so a servant is reminded every day until the week's visits are
+-- logged; the next Saturday it starts over.
+create function public.visit_reminder_targets()
 returns table (servant_id uuid, service_id uuid, service_name text, served_names text[])
 language sql stable security definer set search_path = ''
 as $$
@@ -131,11 +142,11 @@ as $$
   join public.profiles p on p.id = sa.served_id
   where public.is_active_member(sa.servant_id, sa.service_id, 'servant')
     and public.is_active_member(sa.served_id, sa.service_id, 'served')
-    and coalesce(
-          (select max(v.visited_at) from public.visits v
-            where v.service_id = sa.service_id and v.served_id = sa.served_id),
-          '-infinity'::timestamptz
-        ) < now() - make_interval(days => greatest(p_days, 1))
+    and not exists (
+      select 1 from public.visits v
+      where v.service_id = sa.service_id and v.served_id = sa.served_id
+        and v.visited_at >= (public.cairo_week_start()::timestamp at time zone 'Africa/Cairo')
+    )
   group by sa.servant_id, sa.service_id, s.name;
 $$;
 
@@ -143,7 +154,7 @@ revoke execute on function
   public.save_push_subscription(text, text, text),
   public.remove_push_subscription(text),
   public.meeting_reminder_targets(date),
-  public.visit_reminder_targets(int)
+  public.visit_reminder_targets()
 from anon, public, authenticated;
 grant execute on function
   public.save_push_subscription(text, text, text),
@@ -151,5 +162,5 @@ grant execute on function
 to authenticated;
 grant execute on function
   public.meeting_reminder_targets(date),
-  public.visit_reminder_targets(int)
+  public.visit_reminder_targets()
 to service_role;

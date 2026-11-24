@@ -3,8 +3,9 @@
 //   * Kids: the day before each meeting, a message with their name. When
 //     ANTHROPIC_API_KEY is set the messages are written by Claude, otherwise a
 //     fixed template is used.
-//   * Servants: every day while kids assigned to them haven't been visited for
-//     a week; it stops by itself once those visits are logged.
+//   * Servants: the visiting week is Saturday to Thursday. Sunday to Thursday,
+//     a servant whose assigned kids weren't visited yet this week is reminded
+//     daily; it stops once those visits are logged and starts over next week.
 // Each one is saved in the user's in-app inbox and pushed to their devices.
 //
 // The cron secret and the Web Push keys live in Supabase Vault (see the
@@ -17,7 +18,6 @@ import webpush from "npm:web-push@3.6.7";
 
 const SITE_URL = Deno.env.get("SITE_URL") ?? "https://khedma-taupe.vercel.app";
 const SEND_HOUR = 15; // 3 PM, Cairo
-const VISIT_DAYS = 7;
 const KIDS_PER_AI_CALL = 40;
 
 type MeetingTarget = {
@@ -87,6 +87,9 @@ const clock = (time: string) => {
     new Date(Date.UTC(2000, 0, 1, h, m)),
   );
 };
+const cairoWeekday = () =>
+  new Intl.DateTimeFormat("en-US", { weekday: "short", timeZone: "Africa/Cairo" }).format(new Date());
+const VISIT_REMINDER_DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu"];
 const cairoHour = () =>
   Number(new Intl.DateTimeFormat("en-GB", { hour: "2-digit", hourCycle: "h23", timeZone: "Africa/Cairo" }).format(new Date()));
 const firstName = (full: string) => full.trim().split(/\s+/)[0] || full;
@@ -263,7 +266,8 @@ async function meetingReminders(day: string) {
 }
 
 async function visitReminders() {
-  const { data, error } = await db.rpc("visit_reminder_targets", { p_days: VISIT_DAYS });
+  if (!VISIT_REMINDER_DAYS.includes(cairoWeekday())) return { saved: 0, pushed: 0 };
+  const { data, error } = await db.rpc("visit_reminder_targets");
   if (error) throw error;
   const today = cairoDay(0);
   const notes: Note[] = ((data ?? []) as VisitTarget[]).map((t) => {
@@ -278,8 +282,8 @@ async function visitReminders() {
       title: "افتقاد مخدوميك",
       body:
         names.length === 1
-          ? `${shown} محدش افتقده من أكتر من أسبوع. كلمة أو زيارة بتفرق معاه 🙏`
-          : `عندك ${names.length.toLocaleString("ar-EG")} مخدومين محدش افتقدهم من أكتر من أسبوع: ${shown}${more}. كلمة أو زيارة بتفرق معاهم 🙏`,
+          ? `لسه ماافتقدتش ${shown} الأسبوع ده. كلمة أو زيارة بتفرق معاه 🙏`
+          : `لسه ماافتقدتش ${names.length.toLocaleString("ar-EG")} من مخدوميك الأسبوع ده: ${shown}${more}. كلمة أو زيارة بتفرق معاهم 🙏`,
       url: `/s/${t.service_id}/servant/served`,
     };
   });

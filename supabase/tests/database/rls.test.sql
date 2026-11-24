@@ -1194,21 +1194,28 @@ insert into public.notifications (user_id, service_id, kind, ref_key, title, bod
 select is(
   (select count(*)::int from public.meeting_reminder_targets(public.cairo_today() + 20) where served_id = tests.uid('att_kid_2')),
   0, 'reminders: a kid is reminded once per meeting');
+select is(extract(dow from public.cairo_week_start())::int, 6, 'reminders: the visiting week starts on Saturday');
+select ok(public.cairo_today() - public.cairo_week_start() between 0 and 6, 'reminders: the week start is this week''s Saturday');
+-- A visit logged just before this Saturday belongs to last week.
+insert into public.visits (service_id, servant_id, served_id, visit_type, visited_at) values
+  (tests.uid('svc_alert'), tests.uid('al_servant_idle'), tests.uid('al_kid_other'), 'call',
+   (public.cairo_week_start()::timestamp at time zone 'Africa/Cairo') - interval '1 minute'),
+  (tests.uid('svc_alert'), tests.uid('al_servant'), tests.uid('al_kid_absent'), 'home', now());
 select ok(
-  exists (select 1 from public.visit_reminder_targets(7) where servant_id = tests.uid('al_servant_idle')),
-  'reminders: a servant whose kids were not visited for a week is reminded');
+  exists (select 1 from public.visit_reminder_targets() where servant_id = tests.uid('al_servant_idle')),
+  'reminders: a servant whose kids were not visited this week is reminded');
 select ok(
-  not exists (select 1 from public.visit_reminder_targets(7) where servant_id = tests.uid('al_servant')),
-  'reminders: not a servant who visited recently');
+  not exists (select 1 from public.visit_reminder_targets() where servant_id = tests.uid('al_servant')),
+  'reminders: not a servant who visited this week');
 insert into public.notifications (user_id, service_id, kind, ref_key, title, body) values
   (tests.uid('al_servant_idle'), tests.uid('svc_alert'), 'visit_reminder', 'yesterday', 't', 'b');
 select ok(
-  exists (select 1 from public.visit_reminder_targets(7) where servant_id = tests.uid('al_servant_idle')),
+  exists (select 1 from public.visit_reminder_targets() where servant_id = tests.uid('al_servant_idle')),
   'reminders: a servant is reminded again every day while the visit is due');
 insert into public.visits (service_id, servant_id, served_id, visit_type)
   values (tests.uid('svc_alert'), tests.uid('al_servant_idle'), tests.uid('al_kid_other'), 'call');
 select ok(
-  not exists (select 1 from public.visit_reminder_targets(7) where servant_id = tests.uid('al_servant_idle')),
+  not exists (select 1 from public.visit_reminder_targets() where servant_id = tests.uid('al_servant_idle')),
   'reminders: they stop once the kids are visited');
 
 select tests.as_user('att_kid_2');
