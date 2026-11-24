@@ -387,6 +387,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"notifications": {
+                  Row: {
+                    "body": string,"created_at": string,"id": string,"kind": string,"read_at": string | null,"ref_key": string,"service_id": string | null,"title": string,"url": string | null,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "body": string,"created_at"?: string,"id"?: string,"kind": string,"read_at"?: string | null,"ref_key": string,"service_id"?: string | null,"title": string,"url"?: string | null,"user_id": string
+                  }
+                  Update: {
+                    "body"?: string,"created_at"?: string,"id"?: string,"kind"?: string,"read_at"?: string | null,"ref_key"?: string,"service_id"?: string | null,"title"?: string,"url"?: string | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "notifications_service_id_fkey"
+      columns: ["service_id"]
+isOneToOne: false
+      referencedRelation: "services"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "notifications_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"point_rules": {
                   Row: {
                     "created_at": string,"points": number,"reason": Database["public"]['Enums']["point_reason"],"service_id": string
@@ -536,6 +562,26 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"push_subscriptions": {
+                  Row: {
+                    "auth": string,"created_at": string,"endpoint": string,"id": string,"p256dh": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "auth": string,"created_at"?: string,"endpoint": string,"id"?: string,"p256dh": string,"user_id": string
+                  }
+                  Update: {
+                    "auth"?: string,"created_at"?: string,"endpoint"?: string,"id"?: string,"p256dh"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "push_subscriptions_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"servant_assignments": {
                   Row: {
@@ -818,6 +864,9 @@ isOneToOne: false
 "decide_redemption":
 { Args: { "p_redemption": string,"p_status": Database["public"]['Enums']["redemption_status"] }; Returns: undefined
                            },
+"ensure_reminders_cron_secret":
+{ Args: Record<PropertyKey, never>; Returns: undefined
+                           },
 "evaluate_achievements":
 { Args: { "p_service": string,"p_user": string }; Returns: number
                            },
@@ -892,6 +941,11 @@ isOneToOne: false
 "meeting_refs_ok":
 { Args: { "p_class": string,"p_service": string,"p_speaker": string }; Returns: boolean
                            },
+"meeting_reminder_targets":
+{ Args: { "p_day": string }; Returns: {
+              "class_name": string,"details": string,"meeting_date": string,"meeting_id": string,"served_id": string,"served_name": string,"service_id": string,"service_name": string,"speaker_name": string,"start_time": string,"topic": string
+            }[]
+                           },
 "member_class_id":
 { Args: { "p_service": string,"p_user": string }; Returns: string
                            },
@@ -935,8 +989,16 @@ isOneToOne: false
 "regenerate_join_code":
 { Args: { "p_code_id": string }; Returns: string
                            },
+"reminder_settings":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "cron_secret": string,"vapid_private": string,"vapid_public": string
+            }[]
+                           },
 "remove_church_servant":
 { Args: { "p_church": string,"p_user": string }; Returns: undefined
+                           },
+"remove_push_subscription":
+{ Args: { "p_endpoint": string }; Returns: undefined
                            },
 "reverse_points":
 { Args: { "p_entry": string,"p_note"?: string }; Returns: string
@@ -946,6 +1008,12 @@ isOneToOne: false
                            },
 "save_competition":
 { Args: { "p_class": string,"p_description": string,"p_ends_local": string,"p_id": string,"p_max_points": number,"p_service": string,"p_starts_local": string,"p_title": string }; Returns: string
+                           },
+"save_push_subscription":
+{ Args: { "p_auth": string,"p_endpoint": string,"p_p256dh": string }; Returns: undefined
+                           },
+"save_vapid_keys":
+{ Args: { "p_private": string,"p_public": string }; Returns: string
                            },
 "search_users":
 { Args: { "p_query": string }; Returns: {
@@ -977,12 +1045,20 @@ isOneToOne: false
 "try_uuid":
 { Args: { "p_text": string }; Returns: string
                            },
+"vapid_public_key":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
 "visible_phone":
 { Args: { "p_user": string }; Returns: string
                            },
 "visit_overview":
 { Args: { "p_service": string }; Returns: {
               "class_id": string,"full_name": string,"last_visit_at": string,"servant_id": string,"servant_name": string,"served_id": string
+            }[]
+                           },
+"visit_reminder_targets":
+{ Args: { "p_days"?: number }; Returns: {
+              "servant_id": string,"served_names": (string)[],"service_id": string,"service_name": string
             }[]
                            }
           }

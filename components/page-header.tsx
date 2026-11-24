@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import { AppLogo } from "@/components/app-logo";
 import { AppSidebar } from "@/components/app-sidebar";
+import { NotificationBell } from "@/components/notification-bell";
 import { strings } from "@/lib/strings";
 
 export function PageHeader({
@@ -35,7 +36,10 @@ export function PageHeader({
             {strings.app.name}
           </Link>
         )}
-        <AppSidebar />
+        <div className="flex items-center gap-1">
+          <NotificationBell />
+          <AppSidebar />
+        </div>
       </div>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">

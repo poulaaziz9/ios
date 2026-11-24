@@ -1,9 +1,7 @@
-import { LogOut } from "lucide-react";
-
-import { logout } from "@/app/(auth)/actions";
+import { LogoutButton } from "@/components/logout-button";
 import { PageHeader } from "@/components/page-header";
 import { ProfileForm } from "@/components/profile-form";
-import { SubmitButton } from "@/components/submit-button";
+import { PushToggle } from "@/components/push-toggle";
 import { formatPhone } from "@/lib/auth/identifier";
 import { requireUserId } from "@/lib/auth/session";
 import { signedUrls } from "@/lib/storage";
@@ -13,9 +11,10 @@ import { createClient } from "@/lib/supabase/server";
 export default async function ProfilePage() {
   const userId = await requireUserId();
   const supabase = await createClient();
-  const [{ data: profile }, { data: phone }] = await Promise.all([
+  const [{ data: profile }, { data: phone }, { data: pushKey }] = await Promise.all([
     supabase.from("profiles").select("full_name, avatar_url").eq("id", userId).maybeSingle(),
     supabase.rpc("visible_phone", { p_user: userId }),
+    supabase.rpc("vapid_public_key"),
   ]);
   const avatars = await signedUrls("avatars", [profile?.avatar_url]);
 
@@ -26,13 +25,11 @@ export default async function ProfilePage() {
         fullName={profile?.full_name ?? ""}
         avatarUrl={profile?.avatar_url ? avatars.get(profile.avatar_url) : null}
       />
-      <form action={logout} className="flex flex-col gap-2 border-t pt-6">
-        <SubmitButton variant="outline" className="border-destructive/40 text-destructive hover:bg-destructive/10">
-          <LogOut />
-          {strings.profile.logout}
-        </SubmitButton>
+      <PushToggle publicKey={pushKey} />
+      <div className="flex flex-col gap-2 border-t pt-6">
+        <LogoutButton />
         <p className="text-center text-xs text-muted-foreground">{strings.profile.logoutHint}</p>
-      </form>
+      </div>
     </main>
   );
 }

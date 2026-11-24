@@ -204,3 +204,17 @@ test("church admin sends a suggestion; the super admin answers it", async ({ bro
   await item.click();
   await expect(church.getByText("تمام، هنضيفها.")).toBeVisible();
 });
+
+test("notifications: the bell shows unread reminders and the inbox opens them", async ({ page }) => {
+  await login(page, "01200000003"); // بيشوي ماجد, has a seeded meeting reminder
+  const bell = page.getByRole("link", { name: "الإشعارات" });
+  await expect(bell).toContainText("١");
+  await bell.click();
+  await expect(page).toHaveURL(/\/notifications$/);
+  await expect(page.getByText("يا بيشوي، مستنينك بكرة")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "إشعارات على الموبايل" })).toBeVisible();
+
+  // Opening the inbox marks it read.
+  await page.goto("/");
+  await expect(page.getByRole("link", { name: "الإشعارات" })).not.toContainText("١");
+});

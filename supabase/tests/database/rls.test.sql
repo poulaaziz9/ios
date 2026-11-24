@@ -1177,6 +1177,61 @@ select is(tests.affected(format($$ update public.feedback set status = 'closed' 
 reset role;
 
 -- ===========================================================================
+-- Notifications and reminder targets
+-- ===========================================================================
+insert into public.meetings (id, service_id, class_id, meeting_date, topic) values
+  (tests.new_id('meet_y_reminder'), tests.uid('svc_a1'), tests.uid('class_a1y'), public.cairo_today() + 20, 'فصل y');
+select is(
+  (select array_agg(served_name order by served_name) from public.meeting_reminder_targets(public.cairo_today() + 20)
+    where served_id in (tests.uid('att_kid_1'), tests.uid('att_kid_2'))),
+  array['att_kid_2'], 'reminders: a class meeting reminds only that class''s kids');
+select ok(
+  exists (select 1 from public.meeting_reminder_targets(public.cairo_today() + 3)
+          where served_id = tests.uid('att_kid_1') and meeting_id = tests.uid('meet_all')),
+  'reminders: a service-wide meeting reminds every kid');
+insert into public.notifications (user_id, service_id, kind, ref_key, title, body) values
+  (tests.uid('att_kid_2'), tests.uid('svc_a1'), 'meeting_reminder', tests.uid('meet_y_reminder')::text, 't', 'b');
+select is(
+  (select count(*)::int from public.meeting_reminder_targets(public.cairo_today() + 20) where served_id = tests.uid('att_kid_2')),
+  0, 'reminders: a kid is reminded once per meeting');
+select ok(
+  exists (select 1 from public.visit_reminder_targets(7) where servant_id = tests.uid('al_servant_idle')),
+  'reminders: a servant whose kids were not visited for a week is reminded');
+select ok(
+  not exists (select 1 from public.visit_reminder_targets(7) where servant_id = tests.uid('al_servant')),
+  'reminders: not a servant who visited recently');
+
+select tests.as_user('att_kid_2');
+select is((select count(*)::int from public.notifications), 1, 'notifications: a user sees their own');
+select is(tests.affected(format($$ update public.notifications set read_at = now() where user_id = %L $$, tests.uid('att_kid_2'))), 1,
+  'notifications: marks own as read');
+select throws_ok(
+  format($$ insert into public.notifications (user_id, kind, ref_key, title, body) values (%L, 'meeting_reminder', 'x', 't', 'b') $$, tests.uid('att_kid_2')),
+  '42501', null, 'notifications: users cannot create notifications');
+select throws_ok(format('select * from public.meeting_reminder_targets(%L)', public.cairo_today()), '42501', null,
+  'reminders: targets are for the daily job only');
+select lives_ok($$ select public.save_push_subscription('https://push.example/dev1', 'k', 'a') $$, 'push: saves this device');
+select is((select count(*)::int from public.push_subscriptions), 1, 'push: sees own device');
+reset role;
+
+select tests.as_user('att_kid_1');
+select is((select count(*)::int from public.notifications), 0, 'notifications: not someone else''s');
+select lives_ok($$ select public.save_push_subscription('https://push.example/dev1', 'k2', 'a2') $$, 'push: the device moves to whoever signs in');
+select is((select count(*)::int from public.push_subscriptions), 1, 'push: now theirs');
+select lives_ok($$ select public.remove_push_subscription('https://push.example/dev1') $$, 'push: removes own device');
+select is((select count(*)::int from public.push_subscriptions), 0, 'push: removed');
+select throws_ok('select * from public.reminder_settings()', '42501', null, 'reminder keys: secrets are for the job only');
+select throws_ok($$ select public.save_vapid_keys('a', 'b') $$, '42501', null, 'reminder keys: users cannot set push keys');
+reset role;
+select public.ensure_reminders_cron_secret();
+select ok(length((select cron_secret from public.reminder_settings())) = 64, 'reminder keys: a random cron secret is created');
+select is(public.save_vapid_keys('pub1', 'priv1'), 'pub1', 'reminder keys: push keys are stored once');
+select is(public.save_vapid_keys('pub2', 'priv2'), 'pub1', 'reminder keys: the first pair is kept');
+select tests.as_user('att_kid_1');
+select is(public.vapid_public_key(), 'pub1', 'reminder keys: users read the public key');
+reset role;
+
+-- ===========================================================================
 -- Cascade: super admin deletes a church with everything under it
 -- ===========================================================================
 select tests.as_user('super');

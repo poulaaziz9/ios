@@ -224,3 +224,11 @@ insert into public.feedback (id, church_id, author_id, kind, subject, body, crea
 insert into public.feedback_replies (feedback_id, author_id, from_platform, body, created_at) values
   ('60000000-0000-4000-a000-000000000001', '00000000-0000-4000-a000-000000000001', true,
    'فكرة حلوة، هنضيفها في التحديث الجاي إن شاء الله.', now() - interval '2 days');
+
+-- ---------------------------------------------------------------------------
+-- A sample notification (the daily-reminders function creates the real ones)
+-- ---------------------------------------------------------------------------
+insert into public.notifications (user_id, service_id, kind, ref_key, title, body, url) values
+  ('00000000-0000-4000-c000-000000000003', '20000000-0000-4000-a000-000000000001', 'meeting_reminder', 'seed',
+   'اجتماع بكرة: مثل الابن الضال', 'يا بيشوي، مستنينك بكرة في خدمة إعدادي 🙏 موضوعنا: مثل الابن الضال',
+   '/s/20000000-0000-4000-a000-000000000001/home/meetings');
