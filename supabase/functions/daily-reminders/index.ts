@@ -1,8 +1,10 @@
-// Daily reminders, run once a day by pg_cron (see supabase/remote-setup/reminders-cron.sql).
+// Daily reminders at 3 PM Cairo time. pg_cron calls this every hour (Cairo's
+// UTC offset changes with summer time) and only the 3 PM call does the work.
 //   * Kids: the day before each meeting, a message with their name. When
 //     ANTHROPIC_API_KEY is set the messages are written by Claude, otherwise a
 //     fixed template is used.
-//   * Servants: a reminder when kids assigned to them weren't visited for a week.
+//   * Servants: every day while kids assigned to them haven't been visited for
+//     a week; it stops by itself once those visits are logged.
 // Each one is saved in the user's in-app inbox and pushed to their devices.
 //
 // The cron secret and the Web Push keys live in Supabase Vault (see the
@@ -14,6 +16,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.118.0";
 import webpush from "npm:web-push@3.6.7";
 
 const SITE_URL = Deno.env.get("SITE_URL") ?? "https://khedma-taupe.vercel.app";
+const SEND_HOUR = 15; // 3 PM, Cairo
 const VISIT_DAYS = 7;
 const KIDS_PER_AI_CALL = 40;
 
@@ -84,6 +87,8 @@ const clock = (time: string) => {
     new Date(Date.UTC(2000, 0, 1, h, m)),
   );
 };
+const cairoHour = () =>
+  Number(new Intl.DateTimeFormat("en-GB", { hour: "2-digit", hourCycle: "h23", timeZone: "Africa/Cairo" }).format(new Date()));
 const firstName = (full: string) => full.trim().split(/\s+/)[0] || full;
 
 // ---------------------------------------------------------------------------
@@ -296,7 +301,9 @@ Deno.serve(async (req) => {
   // {"init": true} only makes sure the push keys exist.
   if (body.init) return Response.json({ vapid_public: settings.vapidPublic });
   if (typeof body.test_user === "string") return Response.json(await testPush(body.test_user));
-  // `day` overrides "tomorrow" for testing.
+  // Hourly calls do nothing except at 3 PM Cairo; {"force": true} or a
+  // `day` (which overrides "tomorrow", for testing) runs it now.
+  if (!body.force && !body.day && cairoHour() !== SEND_HOUR) return Response.json({ skipped: true });
   const day = typeof body.day === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.day) ? body.day : cairoDay(1);
   try {
     const [meetings, visits] = await Promise.all([meetingReminders(day), visitReminders()]);

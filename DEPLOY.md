@@ -79,6 +79,6 @@
 2. انشر الـ Edge Function `daily-reminders` (من `supabase/functions/daily-reminders`) مع إلغاء التحقق من JWT
    (الوظيفة بتتحقق بنفسها من سر الـ cron).
 3. شغّل `supabase/remote-setup/reminders-cron.sql` في الـ SQL Editor: بيفعّل pg_cron و pg_net، ويعمل سر الـ cron
-   في الـ Vault، ويجدول الوظيفة كل يوم الساعة ٣ العصر UTC (٥ مساءً بتوقيت القاهرة في الشتا)، ويجهّز مفاتيح الإشعارات.
+   في الـ Vault، ويجدول الوظيفة كل ساعة (هي بتبعت الساعة ٣ العصر بتوقيت القاهرة بس)، ويجهّز مفاتيح الإشعارات.
 4. (اختياري) عشان الرسايل تتكتب بالذكاء الاصطناعي باسم كل مخدوم: ضيف `ANTHROPIC_API_KEY` في
    Supabase ← Edge Functions ← Secrets. من غيره الرسايل بتطلع من قالب ثابت فيه اسم المخدوم.

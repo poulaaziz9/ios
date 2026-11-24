@@ -1200,6 +1200,16 @@ select ok(
 select ok(
   not exists (select 1 from public.visit_reminder_targets(7) where servant_id = tests.uid('al_servant')),
   'reminders: not a servant who visited recently');
+insert into public.notifications (user_id, service_id, kind, ref_key, title, body) values
+  (tests.uid('al_servant_idle'), tests.uid('svc_alert'), 'visit_reminder', 'yesterday', 't', 'b');
+select ok(
+  exists (select 1 from public.visit_reminder_targets(7) where servant_id = tests.uid('al_servant_idle')),
+  'reminders: a servant is reminded again every day while the visit is due');
+insert into public.visits (service_id, servant_id, served_id, visit_type)
+  values (tests.uid('svc_alert'), tests.uid('al_servant_idle'), tests.uid('al_kid_other'), 'call');
+select ok(
+  not exists (select 1 from public.visit_reminder_targets(7) where servant_id = tests.uid('al_servant_idle')),
+  'reminders: they stop once the kids are visited');
 
 select tests.as_user('att_kid_2');
 select is((select count(*)::int from public.notifications), 1, 'notifications: a user sees their own');

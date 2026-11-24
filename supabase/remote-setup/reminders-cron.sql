@@ -2,8 +2,8 @@
 -- Run once after the notifications + reminder_keys migrations and after the
 -- function is deployed. Safe to run again (it replaces the job).
 --
--- 15:00 UTC = 5 PM Cairo in winter (6 PM in summer time): the evening
--- before each meeting.
+-- Runs every hour; the function only sends at 3 PM Cairo time (this way
+-- summer time doesn't shift it).
 
 create extension if not exists pg_cron;
 create extension if not exists pg_net;
@@ -15,7 +15,7 @@ where exists (select 1 from cron.job where jobname = 'daily-reminders');
 
 select cron.schedule(
   'daily-reminders',
-  '0 15 * * *',
+  '0 * * * *',
   $$
   select net.http_post(
     url := 'https://deoxqsutaevjazglxmeb.supabase.co/functions/v1/daily-reminders',

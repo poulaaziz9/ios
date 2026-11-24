@@ -3,7 +3,8 @@
 -- edge function, run by pg_cron) creates them:
 --   * meeting_reminder: the day before a meeting, to every kid who will see it
 --     (the message is written per kid by AI when an API key is configured);
---   * visit_reminder: to a servant whose assigned kids weren't visited lately.
+--   * visit_reminder: every day to a servant whose assigned kids weren't
+--     visited lately, until they are.
 
 create table public.notifications (
   id uuid primary key default gen_random_uuid(),
@@ -116,8 +117,9 @@ as $$
   order by m.id, p.full_name;
 $$;
 
--- Servants with assigned kids nobody visited in p_days days (or ever), who
--- weren't reminded in that time. One row per servant and service.
+-- Servants with assigned kids nobody visited in p_days days (or ever). One
+-- row per servant and service. Asked daily, so a servant is reminded every
+-- day until those visits are logged (the job saves at most one a day).
 create function public.visit_reminder_targets(p_days int default 7)
 returns table (servant_id uuid, service_id uuid, service_name text, served_names text[])
 language sql stable security definer set search_path = ''
@@ -134,12 +136,6 @@ as $$
             where v.service_id = sa.service_id and v.served_id = sa.served_id),
           '-infinity'::timestamptz
         ) < now() - make_interval(days => greatest(p_days, 1))
-    and not exists (
-      select 1 from public.notifications n
-      where n.user_id = sa.servant_id and n.kind = 'visit_reminder'
-        and n.service_id = sa.service_id
-        and n.created_at > now() - make_interval(days => greatest(p_days, 1))
-    )
   group by sa.servant_id, sa.service_id, s.name;
 $$;
 
