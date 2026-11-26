@@ -232,3 +232,15 @@ insert into public.notifications (user_id, service_id, kind, ref_key, title, bod
   ('00000000-0000-4000-c000-000000000003', '20000000-0000-4000-a000-000000000001', 'meeting_reminder', 'seed',
    'اجتماع بكرة: مثل الابن الضال', 'يا بيشوي، مستنينك بكرة في خدمة إعدادي 🙏 موضوعنا: مثل الابن الضال',
    '/s/20000000-0000-4000-a000-000000000001/home/meetings');
+
+-- ---------------------------------------------------------------------------
+-- Each account's church (picked at signup in the app). The super admin and the
+-- spare test accounts have none.
+-- ---------------------------------------------------------------------------
+update public.profiles p set church_id = m.church_id
+from (
+  select cr.user_id, cr.church_id from public.church_roles cr
+  union
+  select sm.user_id, s.church_id from public.service_members sm join public.services s on s.id = sm.service_id
+) m
+where p.id = m.user_id and not p.is_super_admin;

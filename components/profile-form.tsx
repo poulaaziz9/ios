@@ -8,11 +8,22 @@ import { ImageInput } from "@/components/image-input";
 import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import { strings } from "@/lib/strings";
 
 const t = strings.profile;
 
-export function ProfileForm({ fullName, avatarUrl }: { fullName: string; avatarUrl?: string | null }) {
+export function ProfileForm({
+  fullName,
+  avatarUrl,
+  churchId,
+  churches,
+}: {
+  fullName: string;
+  avatarUrl?: string | null;
+  churchId: string | null;
+  churches: { id: string; name: string }[];
+}) {
   const [state, action] = useActionState(updateProfile, {});
   return (
     <form action={action} className="flex flex-col gap-5">
@@ -27,6 +38,19 @@ export function ProfileForm({ fullName, avatarUrl }: { fullName: string; avatarU
         <Label htmlFor="full_name">{strings.auth.fullName}</Label>
         <Input id="full_name" name="full_name" defaultValue={fullName} required />
       </div>
+      {churches.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="church_id">{t.church}</Label>
+          <NativeSelect id="church_id" name="church_id" defaultValue={churchId ?? ""}>
+            <option value="">{t.noChurch}</option>
+            {churches.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </NativeSelect>
+        </div>
+      )}
       <SubmitButton className="self-start">{t.save}</SubmitButton>
       {state.ok && <p className="text-sm font-medium text-emerald-600">{t.saved}</p>}
       <FormError message={state.error} />

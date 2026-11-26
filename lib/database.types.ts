@@ -551,17 +551,23 @@ isOneToOne: false
                   ]
                 },"profiles": {
                   Row: {
-                    "avatar_url": string | null,"created_at": string,"full_name": string,"id": string,"is_super_admin": boolean,"phone": string | null
+                    "avatar_url": string | null,"church_id": string | null,"created_at": string,"full_name": string,"id": string,"is_super_admin": boolean,"phone": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "avatar_url"?: string | null,"created_at"?: string,"full_name"?: string,"id": string,"is_super_admin"?: boolean,"phone"?: string | null
+                    "avatar_url"?: string | null,"church_id"?: string | null,"created_at"?: string,"full_name"?: string,"id": string,"is_super_admin"?: boolean,"phone"?: string | null
                   }
                   Update: {
-                    "avatar_url"?: string | null,"created_at"?: string,"full_name"?: string,"id"?: string,"is_super_admin"?: boolean,"phone"?: string | null
+                    "avatar_url"?: string | null,"church_id"?: string | null,"created_at"?: string,"full_name"?: string,"id"?: string,"is_super_admin"?: boolean,"phone"?: string | null
                   }
                   Relationships: [
-                    
+                    {
+      foreignKeyName: "profiles_church_id_fkey"
+      columns: ["church_id"]
+isOneToOne: false
+      referencedRelation: "churches"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"push_subscriptions": {
                   Row: {
@@ -808,6 +814,9 @@ isOneToOne: false
 "cairo_today":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
+"cairo_week_start":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
 "can_see_church":
 { Args: { "p_church": string }; Returns: boolean
                            },
@@ -874,7 +883,7 @@ isOneToOne: false
 { Args: { "p_feedback": string }; Returns: string
                            },
 "find_user_by_phone":
-{ Args: { "p_phone": string }; Returns: {
+{ Args: { "p_church": string,"p_phone": string }; Returns: {
               "full_name": string,"id": string
             }[]
                            },
@@ -1037,6 +1046,11 @@ isOneToOne: false
 "set_servant_services":
 { Args: { "p_church": string,"p_services": (string)[],"p_user": string }; Returns: undefined
                            },
+"signup_churches":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "id": string,"name": string
+            }[]
+                           },
 "submit_competition":
 { Args: { "p_answers": Json,"p_competition": string }; Returns: {
               "correct": number,"score": number,"total": number
@@ -1044,6 +1058,9 @@ isOneToOne: false
                            },
 "try_uuid":
 { Args: { "p_text": string }; Returns: string
+                           },
+"user_in_church":
+{ Args: { "p_church": string,"p_user": string }; Returns: boolean
                            },
 "vapid_public_key":
 { Args: Record<PropertyKey, never>; Returns: string
@@ -1057,7 +1074,7 @@ isOneToOne: false
             }[]
                            },
 "visit_reminder_targets":
-{ Args: { "p_days"?: number }; Returns: {
+{ Args: Record<PropertyKey, never>; Returns: {
               "servant_id": string,"served_names": (string)[],"service_id": string,"service_name": string
             }[]
                            }

@@ -11,10 +11,11 @@ import { createClient } from "@/lib/supabase/server";
 export default async function ProfilePage() {
   const userId = await requireUserId();
   const supabase = await createClient();
-  const [{ data: profile }, { data: phone }, { data: pushKey }] = await Promise.all([
-    supabase.from("profiles").select("full_name, avatar_url").eq("id", userId).maybeSingle(),
+  const [{ data: profile }, { data: phone }, { data: pushKey }, { data: churches }] = await Promise.all([
+    supabase.from("profiles").select("full_name, avatar_url, church_id").eq("id", userId).maybeSingle(),
     supabase.rpc("visible_phone", { p_user: userId }),
     supabase.rpc("vapid_public_key"),
+    supabase.rpc("signup_churches"),
   ]);
   const avatars = await signedUrls("avatars", [profile?.avatar_url]);
 
@@ -24,6 +25,8 @@ export default async function ProfilePage() {
       <ProfileForm
         fullName={profile?.full_name ?? ""}
         avatarUrl={profile?.avatar_url ? avatars.get(profile.avatar_url) : null}
+        churchId={profile?.church_id ?? null}
+        churches={churches ?? []}
       />
       <PushToggle publicKey={pushKey} />
       <div className="flex flex-col gap-2 border-t pt-6">

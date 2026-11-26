@@ -12,6 +12,7 @@ function randomPhone() {
 async function signUp(page: Page, name: string) {
   await page.getByLabel("الاسم بالكامل").fill(name);
   await page.getByLabel("رقم الموبايل").fill(randomPhone());
+  await page.getByLabel("كنيستك").selectOption({ index: 1 });
   await page.getByLabel("كلمة السر").fill("secret12");
   await page.getByRole("button", { name: "اعمل الحساب" }).click();
 }

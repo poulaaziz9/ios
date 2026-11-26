@@ -489,10 +489,35 @@ select is((select full_name from public.search_users('90000013')), 'outsider', '
 select is((select count(*)::int from public.search_users('k')), 0, 'search_users: ignores 1-char queries');
 reset role;
 
+-- The church picked at signup (a new account; a bad id is ignored).
+insert into auth.users (id, email, raw_user_meta_data, aud, role) values
+  (tests.new_id('signup_a'), 'signup_a@test.local',
+   jsonb_build_object('full_name', 'signup a', 'phone', '+201090000091', 'church_id', tests.uid('church_a')), 'authenticated', 'authenticated'),
+  (tests.new_id('signup_bad'), 'signup_bad@test.local',
+   jsonb_build_object('full_name', 'signup bad', 'phone', '+201090000092', 'church_id', 'nope'), 'authenticated', 'authenticated');
+select is((select church_id from public.profiles where id = tests.uid('signup_a')), tests.uid('church_a'), 'signup: the picked church is saved');
+select is((select church_id from public.profiles where id = tests.uid('signup_bad')), null, 'signup: an unknown church is ignored');
+set local role anon;
+select ok((select count(*) from public.signup_churches()) >= 2, 'signup: visitors see the churches to pick from');
+reset role;
+
 select tests.as_user('church_admin_a');
 select throws_ok($$ select * from public.search_users('kid') $$, '42501', null, 'search_users: church admin cannot browse users');
-select is((select full_name from public.find_user_by_phone('+201090000013')), 'outsider', 'find_user_by_phone: church admin exact lookup');
-select is((select count(*)::int from public.find_user_by_phone('+2010900000')), 0, 'find_user_by_phone: no partial matches');
+select is((select count(*)::int from public.find_user_by_phone('+201090000013', tests.uid('church_a'))), 0,
+  'find_user_by_phone: someone with no church is not found');
+select throws_ok(format('select * from public.find_user_by_phone(%L, %L)', '+201090000013', tests.uid('church_b')), '42501', null,
+  'find_user_by_phone: not in another church');
+reset role;
+update public.profiles set church_id = tests.uid('church_b') where id = tests.uid('outsider');
+select tests.as_user('church_admin_a');
+select is((select count(*)::int from public.find_user_by_phone('+201090000013', tests.uid('church_a'))), 0,
+  'find_user_by_phone: someone who chose another church is not found');
+reset role;
+update public.profiles set church_id = tests.uid('church_a') where id = tests.uid('outsider');
+select tests.as_user('church_admin_a');
+select is((select full_name from public.find_user_by_phone('+201090000013', tests.uid('church_a'))), 'outsider',
+  'find_user_by_phone: finds someone who chose this church');
+select is((select count(*)::int from public.find_user_by_phone('+2010900000', tests.uid('church_a'))), 0, 'find_user_by_phone: no partial matches');
 select is(
   (select cardinality(service_ids) from public.church_servants(tests.uid('church_a')) where user_id = tests.uid('servant_x')),
   2, 'church_servants: lists services per servant');
@@ -509,10 +534,16 @@ select lives_ok(
 select is(
   (select count(*)::int from public.service_members where user_id = tests.uid('servant_x') and role = 'servant'),
   1, 'set_servant_services: other memberships removed');
+select throws_ok(
+  format('select public.set_servant_services(%L, %L, array[%L]::uuid[])', tests.uid('church_a'), tests.uid('kid_b'), tests.uid('svc_a1')),
+  '42501', null, 'set_servant_services: not someone of another church');
+reset role;
+update public.profiles set church_id = tests.uid('church_a') where id = tests.uid('kid_b');
+select tests.as_user('church_admin_a');
 select lives_ok(
   format('select public.set_servant_services(%L, %L, array[%L, %L]::uuid[])',
     tests.uid('church_a'), tests.uid('kid_b'), tests.uid('svc_a1'), tests.uid('svc_a2')),
-  'set_servant_services: any existing user can become a servant');
+  'set_servant_services: someone who chose the church can become a servant');
 select ok(exists (select 1 from public.church_roles where user_id = tests.uid('kid_b') and role = 'servant'),
   'set_servant_services: adds to the church pool');
 select throws_ok(
@@ -531,13 +562,15 @@ update public.service_members set status = 'removed' where user_id = tests.uid('
 select is((select count(*)::int from public.servant_assignments where served_id = tests.uid('kid_x')), 0, 'trigger: deactivated kid loses assignment');
 
 select tests.as_user('admin_a1');
-select throws_ok($$ select * from public.find_user_by_phone('+201090000013') $$, '42501', null, 'find_user_by_phone: not for service admins');
+select throws_ok(format('select * from public.find_user_by_phone(%L, %L)', '+201090000013', tests.uid('church_a')), '42501', null,
+  'find_user_by_phone: not for service admins');
 select throws_ok(
   format('select public.set_servant_services(%L, %L, array[]::uuid[])', tests.uid('church_a'), tests.uid('outsider')),
   '42501', null, 'set_servant_services: not for service admins');
 reset role;
 select tests.as_user('outsider');
-select throws_ok($$ select * from public.find_user_by_phone('+201090000001') $$, '42501', null, 'find_user_by_phone: not for regular users');
+select throws_ok(format('select * from public.find_user_by_phone(%L, %L)', '+201090000001', tests.uid('church_a')), '42501', null,
+  'find_user_by_phone: not for regular users');
 reset role;
 
 -- ===========================================================================

@@ -48,18 +48,21 @@ export async function signup(
   const rawPhone = String(formData.get("phone") ?? "");
   const password = String(formData.get("password") ?? "");
   const next = safeNextPath(formData.get("next"));
-  const fields = { full_name: fullName, phone: rawPhone };
+  // Only sent when there are churches to pick from.
+  const churchId = formData.has("church_id") ? String(formData.get("church_id") ?? "") : null;
+  const fields = { full_name: fullName, phone: rawPhone, church_id: churchId ?? "" };
 
   if (!fullName) return { error: t.nameRequired, fields };
   const phone = normalizePhone(rawPhone);
   if (!phone) return { error: t.invalidPhone, fields };
   if (password.length < 6) return { error: t.passwordShort, fields };
+  if (churchId === "") return { error: t.churchRequired, fields };
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({
     email: phoneToAuthEmail(phone),
     password,
-    options: { data: { full_name: fullName, phone } },
+    options: { data: { full_name: fullName, phone, church_id: churchId ?? undefined } },
   });
 
   if (error) {

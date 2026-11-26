@@ -109,7 +109,7 @@ export default async function ChurchServicePage({
               </ActionForm>
             )}
             <p className="text-sm text-muted-foreground">{t.orByPhone}</p>
-            <UserLookup action={appoint} submitLabel={strings.admin.appoint} />
+            <UserLookup churchId={churchId} action={appoint} submitLabel={strings.admin.appoint} />
           </div>
         </CardContent>
       </Card>

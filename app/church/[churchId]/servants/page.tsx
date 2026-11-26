@@ -52,6 +52,7 @@ export default async function ChurchServantsPage({
         </CardHeader>
         <CardContent>
           <UserLookup
+            churchId={churchId}
             action={save}
             submitLabel={t.addServant}
             extra={<ServiceCheckboxes services={services ?? []} />}

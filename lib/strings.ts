@@ -41,6 +41,8 @@ export const strings = {
     password: "كلمة السر",
     passwordHint: "٦ حروف أو أرقام على الأقل",
     photoOptional: "صورتك (اختياري)",
+    church: "كنيستك",
+    churchPlaceholder: "اختار الكنيسة",
     login: "دخول",
     signup: "اعمل الحساب",
     logout: "خروج",
@@ -56,13 +58,15 @@ export const strings = {
       passwordShort: "كلمة السر لازم تكون ٦ حروف على الأقل.",
       badCredentials: "البيانات غلط، راجع الرقم أو الإيميل وكلمة السر.",
       alreadyRegistered: "الرقم أو الإيميل ده متسجل قبل كده. جرب تسجل دخول.",
+      churchRequired: "اختار كنيستك.",
     },
   },
   home: {
     welcome: (name: string) => (name ? `أهلاً يا ${name}` : "أهلاً بيك"),
     pickService: "اختار الخدمة",
-    noMemberships:
-      "لسه مش منضم لأي خدمة. امسح كود الانضمام من خادم الفصل أو اطلب من مسؤول الخدمة يضيفك.",
+    noMemberships: "لسه مش منضم لأي خدمة.",
+    noMembershipsServed: "لو انت مخدوم: امسح كود الفصل اللي مع خادمك.",
+    noMembershipsServant: "لو انت خادم: ماتمسحش الكود، اطلب من أمين الكنيسة يضيفك للخدمة.",
     joinService: "انضم لخدمة",
     platformAdmin: "إدارة المنصة",
     platformAdminHint: "الكنايس وأمناء الكنايس",
@@ -77,9 +81,9 @@ export const strings = {
   lookup: {
     phoneLabel: "رقم موبايل الشخص",
     find: "دوّر",
-    notFound: "مفيش حساب بالرقم ده. اطلب منه يعمل حساب الأول.",
+    notFound: "مفيش حد بالرقم ده مسجّل في كنيستك. اطلب منه يعمل حساب ويختار كنيستك وهو بيسجل.",
     found: "لقينا:",
-    hint: "الشخص لازم يكون عامل حساب على التطبيق.",
+    hint: "بيظهر بس اللي اختاروا كنيستك وهما بيسجلوا.",
   },
   admin: {
     title: "إدارة المنصة",
@@ -554,6 +558,8 @@ export const strings = {
     save: "حفظ",
     saved: "اتحفظ ✓",
     photoError: "مش قادرين نرفع الصورة. جرب صورة تانية.",
+    church: "كنيستك",
+    noChurch: "— مش محددة —",
   },
   posts: {
     newPost: "بوست جديد",

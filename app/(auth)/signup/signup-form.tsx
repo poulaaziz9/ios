@@ -7,12 +7,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FormError } from "@/components/form-error";
 import { ImageInput } from "@/components/image-input";
+import { NativeSelect } from "@/components/ui/native-select";
 import { strings } from "@/lib/strings";
 import { signup, type AuthFormState } from "../actions";
 
 const t = strings.auth;
 
-export function SignupForm({ next }: { next: string }) {
+export function SignupForm({
+  next,
+  churches,
+}: {
+  next: string;
+  churches: { id: string; name: string }[];
+}) {
   const [state, action, pending] = useActionState<AuthFormState, FormData>(
     signup,
     {},
@@ -47,6 +54,26 @@ export function SignupForm({ next }: { next: string }) {
           required
         />
       </div>
+      {churches.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="church_id">{t.church}</Label>
+          <NativeSelect
+            id="church_id"
+            name="church_id"
+            defaultValue={state.fields?.church_id ?? ""}
+            required
+          >
+            <option value="" disabled>
+              {t.churchPlaceholder}
+            </option>
+            {churches.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </NativeSelect>
+        </div>
+      )}
       <div className="flex flex-col gap-2">
         <Label htmlFor="password">{t.password}</Label>
         <Input

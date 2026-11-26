@@ -17,10 +17,13 @@ import { strings } from "@/lib/strings";
  * fields rendered in `extra` (e.g. service checkboxes).
  */
 export function UserLookup({
+  churchId,
   action,
   submitLabel,
   extra,
 }: {
+  /** Only people who chose this church at signup are found. */
+  churchId: string;
   action: (prev: ActionState, formData: FormData) => Promise<ActionState>;
   submitLabel: string;
   extra?: ReactNode;
@@ -44,6 +47,7 @@ export function UserLookup({
   if (!user) {
     return (
       <form action={lookupAction} className="flex flex-col gap-2">
+        <input type="hidden" name="church_id" value={churchId} />
         <Label htmlFor={inputId}>{strings.lookup.phoneLabel}</Label>
         <div className="flex gap-2">
           <Input

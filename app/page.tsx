@@ -42,8 +42,10 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
       />
       {destinations.length === 0 ? (
         <Card>
-          <CardContent className="text-sm text-muted-foreground">
-            {strings.home.noMemberships}
+          <CardContent className="flex flex-col gap-2 text-sm">
+            <p className="font-medium">{strings.home.noMemberships}</p>
+            <p className="text-muted-foreground">{strings.home.noMembershipsServed}</p>
+            <p className="text-muted-foreground">{strings.home.noMembershipsServant}</p>
           </CardContent>
         </Card>
       ) : (

@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 import { safeNextPath } from "@/lib/auth/next-path";
 import { strings } from "@/lib/strings";
+import { createClient } from "@/lib/supabase/server";
 import { SignupForm } from "./signup-form";
 
 const t = strings.auth;
@@ -18,6 +19,8 @@ export default async function SignupPage({
   searchParams,
 }: PageProps<"/signup">) {
   const next = safeNextPath((await searchParams).next);
+  const supabase = await createClient();
+  const { data: churches } = await supabase.rpc("signup_churches");
   const loginHref =
     next === "/" ? "/login" : `/login?next=${encodeURIComponent(next)}`;
 
@@ -28,7 +31,7 @@ export default async function SignupPage({
         <CardDescription>{t.signupSubtitle}</CardDescription>
       </CardHeader>
       <CardContent>
-        <SignupForm next={next} />
+        <SignupForm next={next} churches={churches ?? []} />
       </CardContent>
       <CardFooter className="justify-center gap-1 text-sm">
         <span className="text-muted-foreground">{t.haveAccount}</span>

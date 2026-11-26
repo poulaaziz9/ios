@@ -13,6 +13,9 @@ export async function updateProfile(_prev: ActionState, formData: FormData): Pro
   const fullName = text(formData, "full_name");
   if (!fullName) return { error: strings.auth.errors.nameRequired };
 
+  // Only sent when there are churches to pick from; empty = none.
+  const churchId = formData.has("church_id") ? text(formData, "church_id") || null : undefined;
+
   const supabase = await createClient();
   const { data: current } = await supabase
     .from("profiles")
@@ -32,7 +35,11 @@ export async function updateProfile(_prev: ActionState, formData: FormData): Pro
 
   const { error } = await supabase
     .from("profiles")
-    .update({ full_name: fullName, avatar_url: avatarUrl })
+    .update({
+      full_name: fullName,
+      avatar_url: avatarUrl,
+      ...(churchId !== undefined && { church_id: churchId }),
+    })
     .eq("id", userId);
   if (!error && current?.avatar_url && current.avatar_url !== avatarUrl) {
     await supabase.storage.from("avatars").remove([current.avatar_url]);
