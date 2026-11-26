@@ -244,3 +244,11 @@ from (
   select sm.user_id, s.church_id from public.service_members sm join public.services s on s.id = sm.service_id
 ) m
 where p.id = m.user_id and not p.is_super_admin;
+update public.profiles p set account_kind = case
+  when exists (select 1 from public.church_roles cr where cr.user_id = p.id)
+    or exists (select 1 from public.service_members sm where sm.user_id = p.id and sm.role <> 'served')
+    then 'servant'::public.account_kind
+  when exists (select 1 from public.service_members sm where sm.user_id = p.id)
+    then 'served'::public.account_kind
+end
+where not p.is_super_admin;

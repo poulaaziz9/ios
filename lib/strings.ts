@@ -43,6 +43,11 @@ export const strings = {
     photoOptional: "صورتك (اختياري)",
     church: "كنيستك",
     churchPlaceholder: "اختار الكنيسة",
+    accountKind: "انت",
+    kindServant: "خادم",
+    kindServantHint: "بتخدم في الكنيسة",
+    kindServed: "مخدوم",
+    kindServedHint: "بتحضر الاجتماعات",
     login: "دخول",
     signup: "اعمل الحساب",
     logout: "خروج",
@@ -59,6 +64,7 @@ export const strings = {
       badCredentials: "البيانات غلط، راجع الرقم أو الإيميل وكلمة السر.",
       alreadyRegistered: "الرقم أو الإيميل ده متسجل قبل كده. جرب تسجل دخول.",
       churchRequired: "اختار كنيستك.",
+      kindRequired: "اختار انت خادم ولا مخدوم.",
     },
   },
   home: {
@@ -560,6 +566,7 @@ export const strings = {
     photoError: "مش قادرين نرفع الصورة. جرب صورة تانية.",
     church: "كنيستك",
     noChurch: "— مش محددة —",
+    accountKind: "انت",
   },
   posts: {
     newPost: "بوست جديد",
@@ -664,6 +671,8 @@ export const strings = {
       invalid_code: "الكود ده مش شغال. اتأكد منه أو اطلب كود جديد من خادم الفصل.",
       removed: "اتشلت من الخدمة دي قبل كده. كلّم أمين الخدمة.",
       staff: "انت بتخدم في الخدمة دي، مش محتاج تنضم كمخدوم.",
+      servant_account:
+        "حسابك متسجل كخادم، والكود ده للمخدومين بس. اطلب من أمين الكنيسة يضيفك للخدمة. لو اتسجلت غلط غيّرها من «حسابي».",
     },
   },
   offline: {

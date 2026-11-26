@@ -31,7 +31,12 @@ export default async function SignupPage({
         <CardDescription>{t.signupSubtitle}</CardDescription>
       </CardHeader>
       <CardContent>
-        <SignupForm next={next} churches={churches ?? []} />
+        <SignupForm
+          next={next}
+          churches={churches ?? []}
+          // Coming from a class QR code: it's a kid.
+          defaultKind={next.startsWith("/join") ? "served" : undefined}
+        />
       </CardContent>
       <CardFooter className="justify-center gap-1 text-sm">
         <span className="text-muted-foreground">{t.haveAccount}</span>

@@ -12,7 +12,7 @@ export default async function ProfilePage() {
   const userId = await requireUserId();
   const supabase = await createClient();
   const [{ data: profile }, { data: phone }, { data: pushKey }, { data: churches }] = await Promise.all([
-    supabase.from("profiles").select("full_name, avatar_url, church_id").eq("id", userId).maybeSingle(),
+    supabase.from("profiles").select("full_name, avatar_url, church_id, account_kind").eq("id", userId).maybeSingle(),
     supabase.rpc("visible_phone", { p_user: userId }),
     supabase.rpc("vapid_public_key"),
     supabase.rpc("signup_churches"),
@@ -27,6 +27,7 @@ export default async function ProfilePage() {
         avatarUrl={profile?.avatar_url ? avatars.get(profile.avatar_url) : null}
         churchId={profile?.church_id ?? null}
         churches={churches ?? []}
+        accountKind={profile?.account_kind ?? null}
       />
       <PushToggle publicKey={pushKey} />
       <div className="flex flex-col gap-2 border-t pt-6">

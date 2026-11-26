@@ -18,11 +18,13 @@ export function ProfileForm({
   avatarUrl,
   churchId,
   churches,
+  accountKind,
 }: {
   fullName: string;
   avatarUrl?: string | null;
   churchId: string | null;
   churches: { id: string; name: string }[];
+  accountKind: "servant" | "served" | null;
 }) {
   const [state, action] = useActionState(updateProfile, {});
   return (
@@ -37,6 +39,14 @@ export function ProfileForm({
       <div className="flex flex-col gap-2">
         <Label htmlFor="full_name">{strings.auth.fullName}</Label>
         <Input id="full_name" name="full_name" defaultValue={fullName} required />
+      </div>
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="account_kind">{t.accountKind}</Label>
+        <NativeSelect id="account_kind" name="account_kind" defaultValue={accountKind ?? ""}>
+          {!accountKind && <option value="">{t.noChurch}</option>}
+          <option value="servant">{strings.auth.kindServant}</option>
+          <option value="served">{strings.auth.kindServed}</option>
+        </NativeSelect>
       </div>
       {churches.length > 0 && (
         <div className="flex flex-col gap-2">

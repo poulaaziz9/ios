@@ -77,3 +77,22 @@ test("service admin sees the class QR and can download it", async ({ page }) => 
 
   await expect(card.getByRole("link", { name: "اطبع" })).toHaveCount(0);
 });
+
+test("new servant: signs up as a servant and is told to ask the church admin", async ({ page }) => {
+  await page.goto("/signup");
+  await page.getByLabel("الاسم بالكامل").fill("خادم جديد");
+  await page.getByLabel("رقم الموبايل").fill(randomPhone());
+  await page.getByText("خادم", { exact: true }).click();
+  await page.getByLabel("كنيستك").selectOption({ index: 1 });
+  await page.getByLabel("كلمة السر").fill("secret12");
+  await page.getByRole("button", { name: "اعمل الحساب" }).click();
+
+  await expect(page.getByText(/اطلب من أمين الكنيسة يضيفك/)).toBeVisible();
+  await expect(page.getByText(/امسح كود الفصل/)).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "انضم لخدمة" })).toHaveCount(0);
+
+  // A class code can't turn a servant's account into a kid.
+  await page.goto("/join?code=EADY1A");
+  await page.getByRole("button", { name: "انضم" }).click();
+  await expect(page.getByText(/حسابك متسجل كخادم/)).toBeVisible();
+});

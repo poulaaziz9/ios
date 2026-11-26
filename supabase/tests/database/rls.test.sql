@@ -497,6 +497,11 @@ insert into auth.users (id, email, raw_user_meta_data, aud, role) values
    jsonb_build_object('full_name', 'signup bad', 'phone', '+201090000092', 'church_id', 'nope'), 'authenticated', 'authenticated');
 select is((select church_id from public.profiles where id = tests.uid('signup_a')), tests.uid('church_a'), 'signup: the picked church is saved');
 select is((select church_id from public.profiles where id = tests.uid('signup_bad')), null, 'signup: an unknown church is ignored');
+select tests.as_user('signup_a');
+select is((select church_id from public.profiles where id = tests.uid('signup_a')), tests.uid('church_a'),
+  'profile: a user reads their own church');
+select lives_ok($$ select account_kind from public.profiles limit 1 $$, 'profile: the account kind is readable');
+reset role;
 set local role anon;
 select ok((select count(*) from public.signup_churches()) >= 2, 'signup: visitors see the churches to pick from');
 reset role;
@@ -518,6 +523,16 @@ select tests.as_user('church_admin_a');
 select is((select full_name from public.find_user_by_phone('+201090000013', tests.uid('church_a'))), 'outsider',
   'find_user_by_phone: finds someone who chose this church');
 select is((select count(*)::int from public.find_user_by_phone('+2010900000', tests.uid('church_a'))), 0, 'find_user_by_phone: no partial matches');
+reset role;
+update public.profiles set account_kind = 'served' where id = tests.uid('outsider');
+select tests.as_user('church_admin_a');
+select is((select count(*)::int from public.find_user_by_phone('+201090000013', tests.uid('church_a'))), 0,
+  'find_user_by_phone: kids are not found');
+reset role;
+update public.profiles set account_kind = 'servant' where id = tests.uid('outsider');
+select tests.as_user('church_admin_a');
+select is((select count(*)::int from public.find_user_by_phone('+201090000013', tests.uid('church_a'))), 1,
+  'find_user_by_phone: servants of the church are found');
 select is(
   (select cardinality(service_ids) from public.church_servants(tests.uid('church_a')) where user_id = tests.uid('servant_x')),
   2, 'church_servants: lists services per servant');
@@ -626,7 +641,7 @@ update public.join_codes set expires_at = now() - interval '1 minute' where code
 select tests.as_user('newkid');
 select throws_ok($$ select public.join_with_code('TESTB1X') $$, 'P0001', 'invalid_code', 'join_with_code: inactive code');
 reset role;
-select tests.as_user('outsider');
+select tests.as_user('newkid');
 select throws_ok($$ select public.join_with_code('TESTA1X') $$, 'P0001', 'invalid_code', 'join_with_code: expired code');
 reset role;
 update public.join_codes set expires_at = null where code = 'TESTA1X';
@@ -635,6 +650,14 @@ select throws_ok($$ select public.join_with_code('TESTA1X') $$, 'P0001', 'remove
 reset role;
 select tests.as_user('servant_x');
 select throws_ok($$ select public.join_with_code('TESTA1X') $$, 'P0001', 'staff', 'join_with_code: servants do not join as served');
+reset role;
+insert into auth.users (id, email, raw_user_meta_data, aud, role) values
+  (tests.new_id('new_servant'), 'new_servant@test.local',
+   jsonb_build_object('full_name', 'new servant', 'phone', '+201090000093', 'account_kind', 'servant'), 'authenticated', 'authenticated');
+select is((select account_kind::text from public.profiles where id = tests.uid('new_servant')), 'servant', 'signup: servant or kid is saved');
+select tests.as_user('new_servant');
+select throws_ok($$ select public.join_with_code('TESTA1X') $$, 'P0001', 'servant_account',
+  'join_with_code: a servant account cannot join a class as a kid');
 reset role;
 set local role anon;
 select throws_ok($$ select public.join_with_code('TESTA1X') $$, '42501', null, 'join_with_code: anon cannot join');

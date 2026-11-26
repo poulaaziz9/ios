@@ -30,9 +30,11 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
   const supabase = await createClient();
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name")
+    .select("full_name, account_kind")
     .eq("id", userId)
     .maybeSingle();
+
+  const kind = profile?.account_kind ?? null;
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-6 px-4 py-6">
@@ -44,8 +46,12 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
         <Card>
           <CardContent className="flex flex-col gap-2 text-sm">
             <p className="font-medium">{strings.home.noMemberships}</p>
-            <p className="text-muted-foreground">{strings.home.noMembershipsServed}</p>
-            <p className="text-muted-foreground">{strings.home.noMembershipsServant}</p>
+            {kind !== "servant" && (
+              <p className="text-muted-foreground">{strings.home.noMembershipsServed}</p>
+            )}
+            {kind !== "served" && (
+              <p className="text-muted-foreground">{strings.home.noMembershipsServant}</p>
+            )}
           </CardContent>
         </Card>
       ) : (
@@ -70,12 +76,15 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
           ))}
         </ul>
       )}
-      <Button asChild variant={destinations.length ? "outline" : "default"} size="lg">
-        <Link href="/join">
-          <QrCode />
-          {strings.home.joinService}
-        </Link>
-      </Button>
+      {/* Joining with a class code is for kids; servants are added by the church admin. */}
+      {kind !== "servant" && (
+        <Button asChild variant={destinations.length ? "outline" : "default"} size="lg">
+          <Link href="/join">
+            <QrCode />
+            {strings.home.joinService}
+          </Link>
+        </Button>
+      )}
     </main>
   );
 }

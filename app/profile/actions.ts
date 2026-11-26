@@ -16,6 +16,9 @@ export async function updateProfile(_prev: ActionState, formData: FormData): Pro
   // Only sent when there are churches to pick from; empty = none.
   const churchId = formData.has("church_id") ? text(formData, "church_id") || null : undefined;
 
+  const kindValue = text(formData, "account_kind");
+  const accountKind = kindValue === "servant" || kindValue === "served" ? kindValue : undefined;
+
   const supabase = await createClient();
   const { data: current } = await supabase
     .from("profiles")
@@ -39,6 +42,7 @@ export async function updateProfile(_prev: ActionState, formData: FormData): Pro
       full_name: fullName,
       avatar_url: avatarUrl,
       ...(churchId !== undefined && { church_id: churchId }),
+      ...(accountKind && { account_kind: accountKind }),
     })
     .eq("id", userId);
   if (!error && current?.avatar_url && current.avatar_url !== avatarUrl) {

@@ -551,14 +551,14 @@ isOneToOne: false
                   ]
                 },"profiles": {
                   Row: {
-                    "avatar_url": string | null,"church_id": string | null,"created_at": string,"full_name": string,"id": string,"is_super_admin": boolean,"phone": string | null
+                    "account_kind": Database["public"]['Enums']["account_kind"] | null,"avatar_url": string | null,"church_id": string | null,"created_at": string,"full_name": string,"id": string,"is_super_admin": boolean,"phone": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "avatar_url"?: string | null,"church_id"?: string | null,"created_at"?: string,"full_name"?: string,"id": string,"is_super_admin"?: boolean,"phone"?: string | null
+                    "account_kind"?: Database["public"]['Enums']["account_kind"] | null,"avatar_url"?: string | null,"church_id"?: string | null,"created_at"?: string,"full_name"?: string,"id": string,"is_super_admin"?: boolean,"phone"?: string | null
                   }
                   Update: {
-                    "avatar_url"?: string | null,"church_id"?: string | null,"created_at"?: string,"full_name"?: string,"id"?: string,"is_super_admin"?: boolean,"phone"?: string | null
+                    "account_kind"?: Database["public"]['Enums']["account_kind"] | null,"avatar_url"?: string | null,"church_id"?: string | null,"created_at"?: string,"full_name"?: string,"id"?: string,"is_super_admin"?: boolean,"phone"?: string | null
                   }
                   Relationships: [
                     {
@@ -1080,7 +1080,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "church_role": "church_admin"|"servant","feedback_kind": "complaint"|"suggestion","feedback_status": "open"|"answered"|"closed","member_role": "service_admin"|"servant"|"served","member_status": "pending"|"active"|"removed","point_reason": "competition"|"visit"|"preparation"|"attendance"|"manual"|"gift_redemption"|"achievement","redemption_status": "requested"|"approved"|"delivered"|"rejected","visit_type": "home"|"call"|"message"|"other"
+            "account_kind": "servant"|"served","church_role": "church_admin"|"servant","feedback_kind": "complaint"|"suggestion","feedback_status": "open"|"answered"|"closed","member_role": "service_admin"|"servant"|"served","member_status": "pending"|"active"|"removed","point_reason": "competition"|"visit"|"preparation"|"attendance"|"manual"|"gift_redemption"|"achievement","redemption_status": "requested"|"approved"|"delivered"|"rejected","visit_type": "home"|"call"|"message"|"other"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -1200,7 +1200,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "church_role": ["church_admin", "servant"],"feedback_kind": ["complaint", "suggestion"],"feedback_status": ["open", "answered", "closed"],"member_role": ["service_admin", "servant", "served"],"member_status": ["pending", "active", "removed"],"point_reason": ["competition", "visit", "preparation", "attendance", "manual", "gift_redemption", "achievement"],"redemption_status": ["requested", "approved", "delivered", "rejected"],"visit_type": ["home", "call", "message", "other"]
+            "account_kind": ["servant", "served"],"church_role": ["church_admin", "servant"],"feedback_kind": ["complaint", "suggestion"],"feedback_status": ["open", "answered", "closed"],"member_role": ["service_admin", "servant", "served"],"member_status": ["pending", "active", "removed"],"point_reason": ["competition", "visit", "preparation", "attendance", "manual", "gift_redemption", "achievement"],"redemption_status": ["requested", "approved", "delivered", "rejected"],"visit_type": ["home", "call", "message", "other"]
           }
         }
 } as const

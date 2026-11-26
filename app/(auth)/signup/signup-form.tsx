@@ -13,12 +13,19 @@ import { signup, type AuthFormState } from "../actions";
 
 const t = strings.auth;
 
+const KINDS = [
+  { value: "servant", label: t.kindServant, hint: t.kindServantHint },
+  { value: "served", label: t.kindServed, hint: t.kindServedHint },
+] as const;
+
 export function SignupForm({
   next,
   churches,
+  defaultKind,
 }: {
   next: string;
   churches: { id: string; name: string }[];
+  defaultKind?: "servant" | "served";
 }) {
   const [state, action, pending] = useActionState<AuthFormState, FormData>(
     signup,
@@ -54,6 +61,28 @@ export function SignupForm({
           required
         />
       </div>
+      <fieldset className="flex flex-col gap-2">
+        <legend className="mb-2 text-sm font-medium">{t.accountKind}</legend>
+        <div className="grid grid-cols-2 gap-2">
+          {KINDS.map((k) => (
+            <label
+              key={k.value}
+              className="flex cursor-pointer flex-col items-center gap-0.5 rounded-xl border bg-card px-3 py-3 text-center has-[:checked]:border-primary has-[:checked]:bg-primary/10 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring"
+            >
+              <input
+                type="radio"
+                name="account_kind"
+                value={k.value}
+                defaultChecked={(state.fields?.account_kind ?? defaultKind) === k.value}
+                required
+                className="sr-only"
+              />
+              <span className="font-semibold">{k.label}</span>
+              <span className="text-xs text-muted-foreground">{k.hint}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
       {churches.length > 0 && (
         <div className="flex flex-col gap-2">
           <Label htmlFor="church_id">{t.church}</Label>
