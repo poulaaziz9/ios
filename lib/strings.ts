@@ -206,12 +206,8 @@ export const strings = {
     regenerate: "كود جديد بدله",
     regenerateConfirm: "الكود القديم والـQR بتاعه هيبطلوا يشتغلوا. متأكد؟",
     setExpiry: "غيّر تاريخ الانتهاء",
-    print: "اطبع",
     download: "نزّل الصورة",
     deleteCode: "امسح الكود",
-    printTitle: (className: string) => `انضم لفصل ${className}`,
-    printScan: "امسح الكود بكاميرا الموبايل",
-    printOrType: "أو افتح التطبيق واكتب الكود:",
   },
   points: {
     tabs: { ledger: "السجل", leaderboard: "الترتيب", rules: "الإعدادات" },

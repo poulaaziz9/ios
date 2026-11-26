@@ -59,7 +59,7 @@ test("unknown code shows an error and lets you retry", async ({ page }) => {
   await expect(page.getByLabel("اكتب كود الانضمام")).toHaveValue("NOPE99");
 });
 
-test("service admin sees the class QR and its printable poster", async ({ page }) => {
+test("service admin sees the class QR and can download it", async ({ page }) => {
   await page.goto("/login");
   await page.getByLabel("رقم الموبايل أو الإيميل").fill("01000000003");
   await page.getByLabel("كلمة السر").fill("password123");
@@ -74,10 +74,5 @@ test("service admin sees the class QR and its printable poster", async ({ page }
     /^data:image\/png;base64,/,
   );
 
-  const [poster] = await Promise.all([
-    page.waitForEvent("popup"),
-    card.getByRole("link", { name: "اطبع" }).click(),
-  ]);
-  await expect(poster.getByRole("heading", { name: "انضم لفصل أولى إعدادي" })).toBeVisible();
-  await expect(poster.getByText("EADY1A")).toBeVisible();
+  await expect(card.getByRole("link", { name: "اطبع" })).toHaveCount(0);
 });

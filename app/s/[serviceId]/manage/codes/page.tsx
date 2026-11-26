@@ -1,5 +1,4 @@
-import { Download, Printer } from "lucide-react";
-import Link from "next/link";
+import { Download } from "lucide-react";
 
 import { ActionForm } from "@/components/action-form";
 import { SubmitButton } from "@/components/submit-button";
@@ -115,12 +114,6 @@ export default async function ManageCodesPage({
                 </div>
 
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <Button asChild variant="outline" size="sm">
-                    <Link href={`/s/${serviceId}/print/codes/${c.id}`} target="_blank">
-                      <Printer />
-                      {t.print}
-                    </Link>
-                  </Button>
                   <Button asChild variant="outline" size="sm">
                     <a href={c.png} download={`${className.get(c.class_id) ?? "class"}-${c.code}.png`}>
                       <Download />
